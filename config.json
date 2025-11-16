@@ -1,0 +1,112 @@
+{
+  "detection": {
+    "ddos": {
+      "enabled": true,
+      "packet_threshold": 100,
+      "time_window_seconds": 5,
+      "icmp_threshold": 10,
+      "icmp_time_window_seconds": 3,
+      "baseline_period_seconds": 30,
+      "dynamic_threshold_multiplier": 10,
+      "min_packet_size_bytes": 64,
+      "ignore_localhost": false,
+      "ignore_dns_traffic": true,
+      "ip_whitelist": []
+    },
+    "port_scan": {
+      "enabled": true,
+      "port_threshold": 20,
+      "time_window_seconds": 30,
+      "ip_whitelist": []
+    },
+    "brute_force": {
+      "enabled": true,
+      "failed_attempts_threshold": 5,
+      "time_window_seconds": 300,
+      "ip_whitelist": []
+    },
+    "intrusion": {
+      "enabled": true,
+      "suspicious_commands": [
+        "rm -rf",
+        "chmod 777",
+        "wget",
+        "curl",
+        "nc ",
+        "netcat",
+        "python -c",
+        "bash -c"
+      ],
+      "failed_login_threshold": 3
+    },
+    "process": {
+      "enabled": true,
+      "cpu_threshold_percent": 80,
+      "network_threshold_mbps": 10,
+      "check_interval_seconds": 5
+    },
+    "cps": {
+      "enabled": true,
+      "enabled_protocols": ["modbus", "dnp3", "opcua", "iec61850", "bacnet"],
+      "unauthorized_threshold": 3,
+      "replay_window_seconds": 60,
+      "timing_anomaly_threshold": 2.0,
+      "allowed_ips": [],
+      "plc_addresses": []
+    },
+    "modbus": {
+      "enabled": true,
+      "write_threshold": 5,
+      "allowed_ips": [],
+      "plc_addresses": []
+    },
+    "scada": {
+      "enabled": true,
+      "reconnaissance_threshold": 10,
+      "command_anomaly_threshold": 5,
+      "allowed_ips": [],
+      "hmi_addresses": []
+    }
+  },
+  "alerts": {
+    "desktop": {
+      "enabled": true
+    },
+    "telegram": {
+      "enabled": false,
+      "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
+      "chat_id": "YOUR_CHAT_ID"
+    }
+  },
+  "logs": {
+    "linux_auth_log": "/var/log/auth.log",
+    "linux_syslog": "/var/log/syslog",
+    "windows_event_log": "Security"
+  },
+  "network": {
+    "interface": null,
+    "packet_timeout": 1
+  },
+  "general": {
+    "log_level": "INFO",
+    "log_file": "attack_detection.log",
+    "debug": true
+  },
+  "auto_response": {
+    "enabled": true,
+    "auto_block_ips": true,
+    "auto_kill_processes": true,
+    "auto_disable_interface": false,
+    "auto_lock_accounts": true,
+    "auto_restart_services": false,
+    "block_duration_minutes": 60,
+    "whitelist_ips": [],
+    "protected_services": ["winlogon", "csrss", "lsass"]
+  },
+  "dashboard": {
+    "enabled": true,
+    "port": 8501,
+    "refresh_interval_seconds": 3,
+    "max_attack_history": 1000
+  }
+}

@@ -1,0 +1,410 @@
+"""
+RealTimeAttackDetection - Main Entry Point
+Orchestrates all monitoring, detection, and alerting components.
+"""
+
+import sys
+import signal
+import threading
+import time
+import argparse
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+
+from utils.helper import load_config, setup_logging
+from monitor.network_sniffer import NetworkSniffer
+from monitor.log_monitor import LogMonitor
+from monitor.process_monitor import ProcessMonitor
+from detectors.ddos_detector import DDoSDetector
+from detectors.portscan_detector import PortScanDetector
+from detectors.brute_force_detector import BruteForceDetector
+from detectors.intrusion_detector import IntrusionDetector
+from detectors.cps_detector import CPSDetector
+from detectors.modbus_detector import ModbusDetector
+from alerts.desktop_alert import DesktopAlert
+from alerts.telegram_alert import TelegramAlert
+from auto_response.active_defense import ActiveDefense
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class AttackDetectionSystem:
+    """
+    Main system orchestrator for real-time attack detection.
+    """
+    
+    def __init__(self, config_path: str = "config.json"):
+        """
+        Initialize the attack detection system.
+        
+        Args:
+            config_path: Path to configuration file
+        """
+        self.config = load_config(config_path)
+        self.running = False
+        
+        # Initialize alert systems
+        self.desktop_alert = DesktopAlert()
+        self.telegram_alert = TelegramAlert()
+        
+        # Initialize active defense (IPS)
+        self.active_defense = ActiveDefense()
+        
+        # Initialize detectors
+        self.ddos_detector = DDoSDetector(self._handle_attack)
+        self.portscan_detector = PortScanDetector(self._handle_attack)
+        self.brute_force_detector = BruteForceDetector(self._handle_attack)
+        self.intrusion_detector = IntrusionDetector(self._handle_attack)
+        
+        # Initialize CPS detectors
+        self.cps_detector = CPSDetector(self._handle_attack)
+        self.modbus_detector = ModbusDetector(self._handle_attack)
+        
+        # Initialize monitors
+        self.network_sniffer = None
+        self.log_monitor = None
+        self.process_monitor = None
+        
+        # Statistics
+        self.attack_count = 0
+        self.start_time = None
+    
+    def _handle_attack(self, attack_info: dict):
+        """
+        Handle detected attack - send alerts and display in terminal.
+        
+        Args:
+            attack_info: Dictionary containing attack information
+        """
+        self.attack_count += 1
+        
+        attack_type = attack_info.get("attack_type", "Unknown")
+        attack_subtype = attack_info.get("attack_subtype", "")
+        src_ip = attack_info.get("src_ip", "unknown")
+        severity = attack_info.get("severity", "UNKNOWN")
+        packet_count = attack_info.get("packet_count")
+        packet_rate = attack_info.get("packet_rate", attack_info.get("packet_rate_pps"))
+        protocol = attack_info.get("protocol", "Unknown")
+        
+        # Format human-readable attack details
+        attack_details = []
+        
+        if attack_subtype:
+            attack_details.append(f"Type: {attack_subtype}")
+        
+        if packet_count is not None:
+            attack_details.append(f"Packets: {int(packet_count):,}")
+        
+        if packet_rate is not None and isinstance(packet_rate, (int, float)):
+            attack_details.append(f"Rate: {packet_rate:.2f} PPS")
+        
+        if protocol and protocol != "Unknown":
+            attack_details.append(f"Protocol: {protocol}")
+        
+        details_str = " | ".join(attack_details) if attack_details else ""
+        
+        # Print beautiful attack alert to terminal
+        print("\n" + "=" * 80)
+        print(f"🚨 ATTACK DETECTED #{self.attack_count}")
+        print("=" * 80)
+        print(f"Attack Type:     {attack_type}")
+        if attack_subtype:
+            print(f"Subtype:        {attack_subtype}")
+        print(f"Source IP:       {src_ip}")
+        print(f"Severity:        {severity}")
+        if details_str:
+            print(f"Details:         {details_str}")
+        print(f"Timestamp:       {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
+        print("=" * 80 + "\n")
+        
+        # Also log to file
+        logger.critical(
+            f"[ATTACK #{self.attack_count}] {attack_type} detected from {src_ip} "
+            f"(Severity: {severity}) {details_str}"
+        )
+        
+        # Send desktop alert
+        self.desktop_alert.send_alert(attack_info)
+        
+        # Send Telegram alert
+        self.telegram_alert.send_alert(attack_info)
+        
+        # Auto-respond to attack (IPS - Active Defense)
+        self.active_defense.handle_attack(attack_info)
+    
+    def _packet_handler(self, packet_info: dict):
+        """
+        Handle network packet from sniffer.
+        
+        Args:
+            packet_info: Dictionary containing packet information
+        """
+        # DEBUG: Log ICMP packets at main level (ALWAYS show, not just debug)
+        if packet_info.get("protocol") == 1 and packet_info.get("icmp_type") == 8:
+            src_ip = packet_info.get("src_ip", "unknown")
+            logger.info(f"[PING] ICMP ping packet received from {src_ip}")
+        
+        # Send to relevant detectors
+        if self.ddos_detector.enabled:
+            self.ddos_detector.analyze_packet(packet_info)
+        
+        if self.portscan_detector.enabled:
+            self.portscan_detector.analyze_packet(packet_info)
+        
+        # Send to CPS detectors
+        if self.cps_detector.enabled:
+            self.cps_detector.analyze_packet(packet_info)
+        
+        if self.modbus_detector.enabled:
+            self.modbus_detector.analyze_packet(packet_info)
+    
+    def _log_handler(self, log_line: str, log_source: str):
+        """
+        Handle log entry from log monitor.
+        
+        Args:
+            log_line: Log line text
+            log_source: Source of the log
+        """
+        # Send to relevant detectors
+        if self.brute_force_detector.enabled:
+            self.brute_force_detector.analyze_log_entry(log_line, log_source)
+        
+        if self.intrusion_detector.enabled:
+            self.intrusion_detector.analyze_log_entry(log_line, log_source)
+    
+    def _process_handler(self, process_info: dict):
+        """
+        Handle process information from process monitor.
+        
+        Args:
+            process_info: Dictionary containing process information
+        """
+        # Send to intrusion detector
+        if self.intrusion_detector.enabled:
+            self.intrusion_detector.analyze_process(process_info)
+    
+    def start(self):
+        """Start all monitoring and detection systems."""
+        if self.running:
+            logger.warning("System is already running")
+            return
+        
+        logger.info("=" * 60)
+        logger.info("Starting RealTimeAttackDetection System")
+        logger.info("=" * 60)
+        
+        self.running = True
+        self.start_time = time.time()
+        
+        try:
+            # Start network sniffer
+            try:
+                self.network_sniffer = NetworkSniffer(self._packet_handler)
+                self.network_sniffer.start()
+                logger.info("[OK] Network sniffer started")
+                logger.info("[INFO] If you don't see packets being captured, check:")
+                logger.info("   1. Running as Administrator?")
+                logger.info("   2. Npcap installed? (Windows)")
+                logger.info("   3. Network interface correct?")
+            except Exception as e:
+                logger.error(f"[ERROR] Failed to start network sniffer: {e}")
+                logger.error("This is CRITICAL - attacks cannot be detected without packet capture!")
+                import traceback
+                logger.error(traceback.format_exc())
+            
+            # Start log monitor
+            try:
+                self.log_monitor = LogMonitor(self._log_handler)
+                self.log_monitor.start()
+                logger.info("[OK] Log monitor started")
+            except Exception as e:
+                logger.error(f"[ERROR] Failed to start log monitor: {e}")
+            
+            # Start process monitor
+            try:
+                self.process_monitor = ProcessMonitor(self._process_handler)
+                self.process_monitor.start()
+                logger.info("[OK] Process monitor started")
+            except Exception as e:
+                logger.error(f"[ERROR] Failed to start process monitor: {e}")
+            
+            # Print detector status
+            logger.info("\nDetector Status:")
+            logger.info(f"  - DDoS Detector: {'[ENABLED]' if self.ddos_detector.enabled else '[DISABLED]'}")
+            logger.info(f"  - Port Scan Detector: {'[ENABLED]' if self.portscan_detector.enabled else '[DISABLED]'}")
+            logger.info(f"  - Brute Force Detector: {'[ENABLED]' if self.brute_force_detector.enabled else '[DISABLED]'}")
+            logger.info(f"  - Intrusion Detector: {'[ENABLED]' if self.intrusion_detector.enabled else '[DISABLED]'}")
+            logger.info(f"  - CPS Detector: {'[ENABLED]' if self.cps_detector.enabled else '[DISABLED]'}")
+            logger.info(f"  - Modbus Detector: {'[ENABLED]' if self.modbus_detector.enabled else '[DISABLED]'}")
+            
+            # Print alert status
+            logger.info("\nAlert Status:")
+            logger.info(f"  - Desktop Alerts: {'[ENABLED]' if self.desktop_alert.enabled else '[DISABLED]'}")
+            logger.info(f"  - Telegram Alerts: {'[ENABLED]' if self.telegram_alert.enabled else '[DISABLED]'}")
+            
+            # Print active defense status
+            logger.info("\nActive Defense (IPS) Status:")
+            logger.info(f"  - Auto-Response: {'[ENABLED]' if self.active_defense.enabled else '[DISABLED]'}")
+            logger.info(f"  - Auto-Block IPs: {'[ENABLED]' if self.active_defense.auto_block_ips else '[DISABLED]'}")
+            logger.info(f"  - Auto-Kill Processes: {'[ENABLED]' if self.active_defense.auto_kill_processes else '[DISABLED]'}")
+            
+            logger.info("\n" + "=" * 60)
+            logger.info("System is running. Press Ctrl+C to stop.")
+            logger.info("=" * 60 + "\n")
+        
+        except Exception as e:
+            logger.error(f"Error starting system: {e}")
+            self.stop()
+            raise
+    
+    def stop(self):
+        """Stop all monitoring and detection systems."""
+        if not self.running:
+            return
+        
+        logger.info("\nShutting down RealTimeAttackDetection System...")
+        
+        self.running = False
+        
+        # Stop monitors
+        if self.network_sniffer:
+            self.network_sniffer.stop()
+            logger.info("[OK] Network sniffer stopped")
+        
+        if self.log_monitor:
+            self.log_monitor.stop()
+            logger.info("[OK] Log monitor stopped")
+        
+        if self.process_monitor:
+            self.process_monitor.stop()
+            logger.info("[OK] Process monitor stopped")
+        
+        # Print statistics
+        elapsed = time.time() - self.start_time if self.start_time else 0
+        logger.info(f"\nStatistics:")
+        logger.info(f"  - Total attacks detected: {self.attack_count}")
+        logger.info(f"  - Runtime: {elapsed:.2f} seconds")
+        
+        logger.info("System stopped.")
+    
+    def get_statistics(self) -> dict:
+        """
+        Get system statistics.
+        
+        Returns:
+            Dictionary with system statistics
+        """
+        elapsed = time.time() - self.start_time if self.start_time else 0
+        
+        stats = {
+            "running": self.running,
+            "runtime_seconds": elapsed,
+            "attacks_detected": self.attack_count,
+            "detectors": {
+                "ddos": self.ddos_detector.get_statistics(),
+                "port_scan": self.portscan_detector.get_statistics(),
+                "brute_force": self.brute_force_detector.get_statistics(),
+                "intrusion": self.intrusion_detector.get_statistics()
+            }
+        }
+        
+        if self.network_sniffer:
+            stats["network_sniffer"] = self.network_sniffer.get_statistics()
+        
+        if self.process_monitor:
+            stats["process_monitor"] = self.process_monitor.get_system_stats()
+        
+        return stats
+
+
+def signal_handler(sig, frame):
+    """Handle interrupt signal (Ctrl+C)."""
+    logger.info("\nReceived interrupt signal. Shutting down...")
+    if 'system' in globals():
+        system.stop()
+    sys.exit(0)
+
+
+def main():
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description="RealTimeAttackDetection - Real-time cyber attack detection system"
+    )
+    parser.add_argument(
+        "-c", "--config",
+        default="config.json",
+        help="Path to configuration file (default: config.json)"
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose logging (DEBUG level)"
+    )
+    parser.add_argument(
+        "--test-alerts",
+        action="store_true",
+        help="Test alert systems and exit"
+    )
+    
+    args = parser.parse_args()
+    
+    # Setup logging
+    log_level = "DEBUG" if args.verbose else "INFO"
+    try:
+        config = load_config(args.config)
+        log_level = config.get("general", {}).get("log_level", log_level)
+        log_file = config.get("general", {}).get("log_file")
+    except:
+        log_file = None
+    
+    setup_logging(log_level, log_file)
+    
+    # Test alerts if requested
+    if args.test_alerts:
+        logger.info("Testing alert systems...")
+        desktop_alert = DesktopAlert()
+        telegram_alert = TelegramAlert()
+        
+        desktop_alert.test_notification()
+        logger.info("Desktop alert test sent")
+        
+        if telegram_alert.enabled:
+            telegram_alert.test_notification()
+            logger.info("Telegram alert test sent")
+        else:
+            logger.info("Telegram alerts not configured")
+        
+        return
+    
+    # Register signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    # Create and start system
+    global system
+    system = AttackDetectionSystem(args.config)
+    
+    try:
+        system.start()
+        
+        # Keep main thread alive
+        while system.running:
+            time.sleep(1)
+    
+    except KeyboardInterrupt:
+        logger.info("\nReceived keyboard interrupt")
+    except Exception as e:
+        logger.error(f"Fatal error: {e}", exc_info=True)
+    finally:
+        system.stop()
+
+
+if __name__ == "__main__":
+    main()
+

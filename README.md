@@ -1,6 +1,16 @@
-# RealTimeAttackDetection
+# 🛡️ Real-Time Attack Detection System for Cyber-Physical Systems (CPS)
 
-A comprehensive real-time cyber attack detection system built with Python. This system monitors network traffic, system logs, and processes to detect various types of cyber attacks and sends alerts via desktop notifications and/or Telegram.
+A comprehensive, production-ready real-time cyber attack detection and prevention system built with Python. This system provides advanced monitoring, detection, alerting, and automated response capabilities for both traditional IT systems and Cyber-Physical Systems (CPS/SCADA).
+
+## 🌟 Key Highlights
+
+- ✅ **20+ Attack Types Detected** across 6 main categories
+- ✅ **Real-Time Monitoring** of network, logs, and processes
+- ✅ **Modern Web Dashboard** with glassmorphism UI
+- ✅ **Active Defense (IPS)** with automated response
+- ✅ **Industrial Protocol Support** (Modbus, DNP3, OPC-UA, IEC 61850, BACnet)
+- ✅ **Cross-Platform** (Windows, Linux, macOS)
+- ✅ **Multi-Channel Alerts** (Desktop, Telegram, Terminal, Web)
 
 ## 🛡️ Features
 

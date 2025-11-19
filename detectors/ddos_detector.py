@@ -41,13 +41,18 @@ class DDoSDetector:
         self.baseline_pps = 0.0  # Packets per second baseline
         self.dynamic_threshold_multiplier = 10
         
-        # Static threshold (fallback) - Lower for better ping flood detection
-        self.packet_threshold = 100  # Lowered from 500 for better detection
+        # Static threshold (fallback) - Higher to prevent false positives
+        self.packet_threshold = 1000  # Require 1000 packets for general DDoS
         self.time_window = 5  # 5 seconds
         
-        # ICMP-specific threshold (VERY sensitive for ping floods)
-        self.icmp_threshold = 10  # ICMP packets in time window (VERY LOW for immediate detection)
-        self.icmp_time_window = 3  # 3 seconds (shorter window for faster detection)
+        # ICMP-specific threshold (balanced for real ping floods)
+        self.icmp_threshold = 100  # ICMP packets in time window (realistic for ping floods)
+        self.icmp_time_window = 3  # 3 seconds
+        
+        # Minimum requirements to prevent false positives
+        self.min_packets_for_alert = 50  # Minimum packets before alerting
+        self.min_icmp_packets_for_alert = 30  # Minimum ICMP packets for ping flood
+        self.min_pps_for_alert = 500  # Minimum sustained PPS (not spikes)
         
         # Filtering options
         self.min_packet_size = 64  # bytes
@@ -81,13 +86,16 @@ class DDoSDetector:
             self.enabled = ddos_config.get("enabled", True)
             self.packet_threshold = ddos_config.get("packet_threshold", 100)
             self.time_window = ddos_config.get("time_window_seconds", 5)
-            self.icmp_threshold = ddos_config.get("icmp_threshold", 10)
+            self.icmp_threshold = ddos_config.get("icmp_threshold", 100)
             self.icmp_time_window = ddos_config.get("icmp_time_window_seconds", 3)
-            self.baseline_period = ddos_config.get("baseline_period_seconds", 30)
+            self.baseline_period = ddos_config.get("baseline_period_seconds", 60)
             self.dynamic_threshold_multiplier = ddos_config.get("dynamic_threshold_multiplier", 10)
             self.min_packet_size = ddos_config.get("min_packet_size_bytes", 64)
-            self.ignore_localhost = ddos_config.get("ignore_localhost", False)
+            self.ignore_localhost = ddos_config.get("ignore_localhost", True)
             self.ignore_dns = ddos_config.get("ignore_dns_traffic", True)
+            self.min_packets_for_alert = ddos_config.get("min_packets_for_alert", 50)
+            self.min_icmp_packets_for_alert = ddos_config.get("min_icmp_packets_for_alert", 30)
+            self.min_pps_for_alert = ddos_config.get("min_pps_for_alert", 500)
             self.ip_whitelist = set(ddos_config.get("ip_whitelist", []))
             
             # Load debug mode
@@ -262,12 +270,11 @@ class DDoSDetector:
             icmp_type = packet_info.get("icmp_type")
             is_ping = (is_icmp and icmp_type == 8)
             
-            # DEBUG: Log ALL ICMP ping packets immediately (ALWAYS, not just debug mode)
-            if is_ping:
+            # DEBUG: Log ICMP ping packets only in debug mode (reduce noise)
+            if is_ping and self.debug_mode:
                 src_ip_debug = packet_info.get("src_ip", "unknown")
-                logger.info(f"[ICMP] PING packet from {src_ip_debug} (type={icmp_type})")
-                if self.debug_mode:
-                    logger.debug(f"[ICMP-DEBUG] PING packet details: {packet_info}")
+                logger.debug(f"[ICMP-DEBUG] PING packet from {src_ip_debug} (type={icmp_type})")
+                logger.debug(f"[ICMP-DEBUG] PING packet details: {packet_info}")
             
             # Calculate baseline if needed
             self._calculate_baseline(current_time)
@@ -303,11 +310,18 @@ class DDoSDetector:
             if packet_count == 0:
                 return
             
-            # Calculate packet rate (PPS)
+            # Calculate packet rate (PPS) - FIX: Use full time window, not tiny time spans
+            # This prevents false positives from 2 packets arriving 0.001s apart
+            effective_time_window = self.time_window  # Default to configured window
             if packets_in_window:
                 first_packet_time = packets_in_window[0][0]
-                time_span = current_time - first_packet_time
-                packet_rate = packet_count / time_span if time_span > 0 else 0
+                actual_time_span = current_time - first_packet_time
+                # Use FULL time window for PPS calculation (prevents millisecond inflation)
+                # Minimum 1 second to avoid division by tiny numbers
+                time_span = max(actual_time_span, 1.0)
+                # For sustained attack detection, use the configured time window
+                effective_time_window = max(time_span, self.time_window)
+                packet_rate = packet_count / effective_time_window if effective_time_window > 0 else 0
             else:
                 packet_rate = 0
             
@@ -321,14 +335,9 @@ class DDoSDetector:
             ]
             icmp_ping_count = len(icmp_window_packets)
             
-            # DEBUG: Log ICMP packets for troubleshooting (ALWAYS log, not just debug mode)
-            if icmp_ping_count > 0:
-                if icmp_ping_count >= self.icmp_threshold * 0.5:  # Log when we're at 50% of threshold
-                    logger.info(
-                        f"[ICMP-COUNT] ICMP packets from {src_ip}: {icmp_ping_count} ICMP in {self.icmp_time_window}s "
-                        f"(Threshold: {self.icmp_threshold})"
-                    )
-                elif self.debug_mode:
+            # DEBUG: Log ICMP packets only when approaching threshold (reduce noise)
+            if icmp_ping_count > 0 and self.debug_mode:
+                if icmp_ping_count >= self.icmp_threshold * 0.7:  # Log when we're at 70% of threshold
                     logger.debug(
                         f"[ICMP-COUNT] ICMP packets from {src_ip}: {icmp_ping_count} ICMP in {self.icmp_time_window}s "
                         f"(Threshold: {self.icmp_threshold})"
@@ -362,24 +371,43 @@ class DDoSDetector:
             # Log statistics (debug mode or periodic)
             self._log_packet_stats(src_ip, packet_rate, threshold_pps, current_time)
             
+            # MINIMUM PACKET COUNT REQUIREMENT - prevent false positives from tiny bursts
+            MIN_PACKETS_FOR_ALERT = self.min_packets_for_alert
+            MIN_ICMP_PACKETS_FOR_ALERT = self.min_icmp_packets_for_alert
+            
+            # MINIMUM PPS REQUIREMENT - require sustained high rate, not spikes
+            MIN_PPS_FOR_ALERT = self.min_pps_for_alert
+            
             # Check if threshold is exceeded OR ping flood detected
             # For ICMP, trigger immediately if threshold met (no baseline wait)
             should_alert = False
             
             if is_ping_flood:
-                # IMMEDIATE ALERT for ping flood - don't wait for baseline
-                should_alert = True
+                # Ping flood: require minimum ICMP packet count AND threshold exceeded
+                if icmp_ping_count >= MIN_ICMP_PACKETS_FOR_ALERT and icmp_ping_count >= self.icmp_threshold:
+                    should_alert = True
+                else:
+                    # Not enough packets for real attack
+                    return
             elif not self.baseline_calculated:
                 # During baseline period, only alert on ICMP floods
                 # Don't alert on general traffic until baseline is calculated
                 if icmp_ping_count == 0:
                     return
-                should_alert = is_ping_flood
-            elif packet_count >= threshold_packets or packet_rate > threshold_pps:
-                # General threshold exceeded
-                should_alert = True
+                if icmp_ping_count >= MIN_ICMP_PACKETS_FOR_ALERT and icmp_ping_count >= self.icmp_threshold:
+                    should_alert = True
+                else:
+                    return
+            elif packet_count >= threshold_packets and packet_count >= MIN_PACKETS_FOR_ALERT:
+                # General threshold exceeded AND minimum packet count met
+                # Also require sustained high PPS (not just spike)
+                if packet_rate >= MIN_PPS_FOR_ALERT and packet_rate > threshold_pps:
+                    should_alert = True
+                else:
+                    # PPS too low or not sustained - likely false positive
+                    return
             else:
-                # No attack detected
+                # No attack detected (not enough packets or PPS too low)
                 return
             
             if should_alert:
@@ -413,8 +441,8 @@ class DDoSDetector:
                 if not is_ping_flood:
                     logger.warning(
                         f"DDoS attack detected from {src_ip}: {packet_count} packets "
-                        f"({packet_rate:.2f} PPS) in {time_span:.2f}s "
-                        f"(Threshold: {threshold_pps:.2f} PPS)"
+                        f"({packet_rate:.2f} PPS) in {effective_time_window:.2f}s "
+                        f"(Threshold: {threshold_pps:.2f} PPS, Min Required: {MIN_PPS_FOR_ALERT} PPS)"
                     )
                 
                 # Call alert callback

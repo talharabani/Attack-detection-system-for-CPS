@@ -15,6 +15,8 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from utils.helper import load_config, setup_logging
+from utils.attack_logger import AttackLogger
+from utils.notification_manager import NotificationManager
 from monitor.network_sniffer import NetworkSniffer
 from monitor.log_monitor import LogMonitor
 from monitor.process_monitor import ProcessMonitor
@@ -27,6 +29,7 @@ from detectors.modbus_detector import ModbusDetector
 from alerts.desktop_alert import DesktopAlert
 from alerts.telegram_alert import TelegramAlert
 from auto_response.active_defense import ActiveDefense
+from threat_intel.shodan_client import ShodanClient
 
 import logging
 
@@ -55,6 +58,34 @@ class AttackDetectionSystem:
         # Initialize active defense (IPS)
         self.active_defense = ActiveDefense()
         
+        # Initialize attack logger (database)
+        try:
+            self.attack_logger = AttackLogger()
+            logger.info("Attack logger initialized")
+        except Exception as e:
+            logger.error(f"Could not initialize attack logger: {e}")
+            self.attack_logger = None
+        
+        # Initialize notification manager (rate limiting)
+        try:
+            rate_limit = self.config.get("alerts", {}).get("rate_limit_seconds", 60)
+            self.notification_manager = NotificationManager(rate_limit_seconds=rate_limit)
+            logger.info(f"Notification manager initialized (rate limit: {rate_limit}s)")
+        except Exception as e:
+            logger.error(f"Could not initialize notification manager: {e}")
+            self.notification_manager = None
+        
+        # Initialize Shodan threat intelligence (optional)
+        try:
+            self.shodan_client = ShodanClient()
+            if self.shodan_client.enabled:
+                logger.info("Shodan threat intelligence enabled")
+            else:
+                logger.warning("Shodan threat intelligence disabled (no API key)")
+        except Exception as e:
+            logger.warning(f"Could not initialize Shodan client: {e}")
+            self.shodan_client = None
+        
         # Initialize detectors
         self.ddos_detector = DDoSDetector(self._handle_attack)
         self.portscan_detector = PortScanDetector(self._handle_attack)
@@ -73,6 +104,9 @@ class AttackDetectionSystem:
         # Statistics
         self.attack_count = 0
         self.start_time = None
+        
+        # Periodic cleanup task for notification manager
+        self._last_cleanup_time = time.time()
     
     def _handle_attack(self, attack_info: dict):
         """
@@ -108,6 +142,17 @@ class AttackDetectionSystem:
         
         details_str = " | ".join(attack_details) if attack_details else ""
         
+        # Enrich with Shodan threat intelligence
+        shodan_data = None
+        if self.shodan_client and self.shodan_client.enabled and src_ip != "unknown":
+            try:
+                shodan_data = self.shodan_client.enrich_attack_info(src_ip)
+                if shodan_data:
+                    attack_info["shodan_data"] = shodan_data
+                    logger.info(f"Shodan enrichment completed for {src_ip}")
+            except Exception as e:
+                logger.warning(f"Shodan enrichment failed for {src_ip}: {e}")
+        
         # Print beautiful attack alert to terminal
         print("\n" + "=" * 80)
         print(f"🚨 ATTACK DETECTED #{self.attack_count}")
@@ -119,22 +164,117 @@ class AttackDetectionSystem:
         print(f"Severity:        {severity}")
         if details_str:
             print(f"Details:         {details_str}")
+        
+        # Display Shodan threat intelligence if available
+        if shodan_data:
+            print("\n" + "-" * 80)
+            print("🔍 SHODAN THREAT INTELLIGENCE")
+            print("-" * 80)
+            ip_info = shodan_data.get("ip_info", {})
+            
+            if ip_info.get("org") and ip_info.get("org") != "Unknown":
+                print(f"Organization:    {ip_info.get('org')}")
+            if ip_info.get("isp") and ip_info.get("isp") != "Unknown":
+                print(f"ISP:            {ip_info.get('isp')}")
+            if ip_info.get("location", {}).get("country") and ip_info.get("location", {}).get("country") != "Unknown":
+                location = ip_info.get("location", {})
+                loc_str = location.get("country", "")
+                if location.get("city") and location.get("city") != "Unknown":
+                    loc_str += f", {location.get('city')}"
+                print(f"Location:       {loc_str}")
+            
+            open_ports = ip_info.get("open_ports", [])
+            if open_ports:
+                ports_str = ", ".join(map(str, open_ports[:10]))  # Show first 10 ports
+                if len(open_ports) > 10:
+                    ports_str += f" (+{len(open_ports) - 10} more)"
+                print(f"Open Ports:     {ports_str}")
+            
+            vulnerabilities = ip_info.get("vulnerabilities", [])
+            if vulnerabilities:
+                cves_str = ", ".join(vulnerabilities[:5])  # Show first 5 CVEs
+                if len(vulnerabilities) > 5:
+                    cves_str += f" (+{len(vulnerabilities) - 5} more)"
+                print(f"Vulnerabilities: {cves_str}")
+            
+            tags = ip_info.get("tags", [])
+            if tags:
+                print(f"Tags:           {', '.join(tags[:5])}")
+            
+            threat_level = shodan_data.get("threat_level", "UNKNOWN")
+            print(f"Threat Level:   {threat_level}")
+            
+            honeypot = shodan_data.get("honeypot")
+            if honeypot and honeypot.get("honeypot_score") is not None:
+                score = honeypot.get("honeypot_score", 0)
+                print(f"Honeypot Score: {score:.2f} ({'Likely Real' if score < 0.3 else 'Possible Honeypot' if score < 0.7 else 'Likely Honeypot'})")
+            
+            exploits = shodan_data.get("exploits", [])
+            if exploits:
+                print(f"Available Exploits: {len(exploits)} found")
+        
         print(f"Timestamp:       {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
         print("=" * 80 + "\n")
         
-        # Also log to file
-        logger.critical(
-            f"[ATTACK #{self.attack_count}] {attack_type} detected from {src_ip} "
-            f"(Severity: {severity}) {details_str}"
-        )
+        # Also log to file (include Shodan data if available)
+        log_message = f"[ATTACK #{self.attack_count}] {attack_type} detected from {src_ip} (Severity: {severity}) {details_str}"
+        if shodan_data:
+            ip_info = shodan_data.get("ip_info", {})
+            shodan_details = []
+            if ip_info.get("org") and ip_info.get("org") != "Unknown":
+                shodan_details.append(f"Org: {ip_info.get('org')}")
+            if ip_info.get("open_ports"):
+                shodan_details.append(f"Ports: {len(ip_info.get('open_ports', []))}")
+            if ip_info.get("vulnerabilities"):
+                shodan_details.append(f"CVEs: {len(ip_info.get('vulnerabilities', []))}")
+            if shodan_details:
+                log_message += f" | Shodan: {', '.join(shodan_details)}"
+        logger.critical(log_message)
         
-        # Send desktop alert
-        self.desktop_alert.send_alert(attack_info)
+        # Log attack to database for dashboard
+        if self.attack_logger:
+            try:
+                attack_details = {
+                    "packet_count": packet_count,
+                    "packet_rate": packet_rate,
+                    "protocol": protocol,
+                    "attack_subtype": attack_subtype,
+                    "shodan_data": shodan_data
+                }
+                # Remove None values
+                attack_details = {k: v for k, v in attack_details.items() if v is not None}
+                
+                self.attack_logger.log_attack(
+                    attack_type=attack_type,
+                    source_ip=src_ip,
+                    severity=severity,
+                    details=attack_details
+                )
+            except Exception as e:
+                logger.error(f"Error logging attack to database: {e}")
         
-        # Send Telegram alert
-        self.telegram_alert.send_alert(attack_info)
+        # Check rate limiting before sending notifications
+        should_notify = True
+        if self.notification_manager:
+            should_notify = self.notification_manager.should_send_notification(src_ip, attack_info)
+            if should_notify:
+                self.notification_manager.record_notification(src_ip, attack_info)
+            else:
+                # Update attack status even if not notifying
+                self.notification_manager.update_attack_status(src_ip, attack_info)
+        
+        # Send alerts only if rate limit allows
+        if should_notify:
+            # Send desktop alert
+            self.desktop_alert.send_alert(attack_info)
+            
+            # Send Telegram alert
+            self.telegram_alert.send_alert(attack_info)
+        else:
+            logger.debug(f"Notification rate-limited for {src_ip} ({attack_type})")
         
         # Auto-respond to attack (IPS - Active Defense)
+        # This always runs regardless of notification rate limiting
         self.active_defense.handle_attack(attack_info)
     
     def _packet_handler(self, packet_info: dict):
@@ -144,11 +284,6 @@ class AttackDetectionSystem:
         Args:
             packet_info: Dictionary containing packet information
         """
-        # DEBUG: Log ICMP packets at main level (ALWAYS show, not just debug)
-        if packet_info.get("protocol") == 1 and packet_info.get("icmp_type") == 8:
-            src_ip = packet_info.get("src_ip", "unknown")
-            logger.info(f"[PING] ICMP ping packet received from {src_ip}")
-        
         # Send to relevant detectors
         if self.ddos_detector.enabled:
             self.ddos_detector.analyze_packet(packet_info)
@@ -393,9 +528,15 @@ def main():
     try:
         system.start()
         
-        # Keep main thread alive
+        # Keep main thread alive and perform periodic cleanup
         while system.running:
             time.sleep(1)
+            # Clean up inactive attacks every 5 minutes
+            current_time = time.time()
+            if current_time - system._last_cleanup_time > 300:  # 5 minutes
+                if system.notification_manager:
+                    system.notification_manager.clear_inactive_attacks()
+                system._last_cleanup_time = current_time
     
     except KeyboardInterrupt:
         logger.info("\nReceived keyboard interrupt")

@@ -2,15 +2,18 @@
   "detection": {
     "ddos": {
       "enabled": true,
-      "packet_threshold": 100,
+      "packet_threshold": 1000,
       "time_window_seconds": 5,
-      "icmp_threshold": 10,
+      "icmp_threshold": 100,
       "icmp_time_window_seconds": 3,
-      "baseline_period_seconds": 30,
+      "baseline_period_seconds": 60,
       "dynamic_threshold_multiplier": 10,
       "min_packet_size_bytes": 64,
-      "ignore_localhost": false,
+      "ignore_localhost": true,
       "ignore_dns_traffic": true,
+      "min_packets_for_alert": 50,
+      "min_icmp_packets_for_alert": 30,
+      "min_pps_for_alert": 500,
       "ip_whitelist": []
     },
     "port_scan": {

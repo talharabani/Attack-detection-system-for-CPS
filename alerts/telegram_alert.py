@@ -83,16 +83,16 @@ class TelegramAlert:
             message_lines.append(f"*Source IP:* `{src_ip}`")
         
         # Add attack-specific details
-        if attack_type == "DDoS/Flooding" or attack_type == "Ping Flood Attack (ICMP)":
+        if attack_type == "DDoS/Flooding" or attack_type == "Ping Flood Attack":
             packet_count = attack_info.get("packet_count", 0)
             packet_rate = attack_info.get("packet_rate", 0)
             time_window = attack_info.get("time_window", 0)
             icmp_ping_count = attack_info.get("icmp_ping_count", 0)
             
-            if attack_type == "Ping Flood Attack (ICMP)":
+            if attack_type == "Ping Flood Attack":
+                # For ICMP ping flood, packet_count is the ICMP count
                 message_lines.extend([
-                    f"*ICMP Ping Packets:* {icmp_ping_count}",
-                    f"*Total Packets:* {packet_count}",
+                    f"*ICMP Ping Packets:* {packet_count}",
                     f"*Rate:* {packet_rate:.2f} packets/sec",
                     f"*Time Window:* {time_window}s",
                     f"*Protocol:* ICMP Echo Request"

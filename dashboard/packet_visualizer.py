@@ -64,6 +64,9 @@ class PacketVisualizer:
         self.total_packets = 0
         self.start_time = None
         
+        # Packet details for display (like terminal output)
+        self.packet_log = deque(maxlen=500)  # Store last 500 packets with details
+        
     def _packet_handler(self, packet):
         """Handle captured packet."""
         try:
@@ -74,10 +77,24 @@ class PacketVisualizer:
             self.packet_times.append(current_time)
             
             # Extract packet information
+            packet_info = {
+                "timestamp": datetime.now(),
+                "src_ip": None,
+                "dst_ip": None,
+                "protocol": "Unknown",
+                "src_port": None,
+                "dst_port": None,
+                "length": len(packet),
+                "flags": None,
+                "summary": str(packet.summary())
+            }
+            
             if packet.haslayer(IP):
                 ip_layer = packet[IP]
                 src_ip = ip_layer.src
                 dst_ip = ip_layer.dst
+                packet_info["src_ip"] = src_ip
+                packet_info["dst_ip"] = dst_ip
                 
                 # Update heatmap
                 self.heatmap_data[(src_ip, dst_ip)] += 1
@@ -91,13 +108,27 @@ class PacketVisualizer:
                 
                 # Protocol detection
                 if packet.haslayer(TCP):
+                    tcp_layer = packet[TCP]
+                    packet_info["protocol"] = "TCP"
+                    packet_info["src_port"] = tcp_layer.sport
+                    packet_info["dst_port"] = tcp_layer.dport
+                    packet_info["flags"] = tcp_layer.flags
                     self.protocol_counts["TCP"] += 1
                 elif packet.haslayer(UDP):
+                    udp_layer = packet[UDP]
+                    packet_info["protocol"] = "UDP"
+                    packet_info["src_port"] = udp_layer.sport
+                    packet_info["dst_port"] = udp_layer.dport
                     self.protocol_counts["UDP"] += 1
                 elif packet.haslayer(ICMP):
+                    packet_info["protocol"] = "ICMP"
                     self.protocol_counts["ICMP"] += 1
                 else:
                     self.protocol_counts["Other"] += 1
+                    packet_info["protocol"] = "Other"
+            
+            # Store packet info for display
+            self.packet_log.append(packet_info)
             
             # Calculate PPS periodically (every 10 packets or every second)
             if len(self.packet_times) % 10 == 0 or len(self.pps_history) == 0:
@@ -295,6 +326,18 @@ class PacketVisualizer:
             "protocols": dict(self.protocol_counts)
         }
     
+    def get_packet_log(self, limit: int = 100) -> List[Dict]:
+        """
+        Get recent packet log for display (like terminal output).
+        
+        Args:
+            limit: Maximum number of packets to return
+            
+        Returns:
+            List of packet info dicts
+        """
+        return list(self.packet_log)[-limit:]
+    
     def reset(self):
         """Reset all statistics."""
         self.pps_history.clear()
@@ -302,6 +345,7 @@ class PacketVisualizer:
         self.heatmap_data.clear()
         self.top_talkers.clear()
         self.protocol_counts.clear()
+        self.packet_log.clear()
         self.total_packets = 0
         self.start_time = None
 

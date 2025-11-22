@@ -70,17 +70,18 @@ class DesktopAlert:
             message_parts.append(f"Source IP: {src_ip}")
         
         # Add attack-specific details
-        if attack_type == "DDoS/Flooding" or attack_type == "Ping Flood Attack (ICMP)":
+        if attack_type == "DDoS/Flooding" or attack_type == "Ping Flood Attack":
             packet_count = attack_info.get("packet_count", 0)
             packet_rate = attack_info.get("packet_rate", 0)
             icmp_ping_count = attack_info.get("icmp_ping_count", 0)
             
-            if attack_type == "Ping Flood Attack (ICMP)":
-                message_parts.append(f"ICMP Ping Packets: {icmp_ping_count}")
-                message_parts.append(f"Total Packets: {packet_count}")
+            if attack_type == "Ping Flood Attack":
+                # For ICMP ping flood, packet_count is the ICMP count
+                message_parts.append(f"ICMP Ping Packets: {packet_count}")
+                message_parts.append(f"Rate: {packet_rate:.2f} pkt/s")
             else:
                 message_parts.append(f"Packets: {packet_count}")
-            message_parts.append(f"Rate: {packet_rate:.2f} pkt/s")
+                message_parts.append(f"Rate: {packet_rate:.2f} pkt/s")
         
         elif attack_type == "Port Scanning":
             port_count = attack_info.get("port_count", 0)

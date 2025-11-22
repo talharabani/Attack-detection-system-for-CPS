@@ -153,17 +153,69 @@ class AttackDetectionSystem:
             except Exception as e:
                 logger.warning(f"Shodan enrichment failed for {src_ip}: {e}")
         
-        # Print beautiful attack alert to terminal
+        # Format packet count and rate for display
+        packet_count_display = ""
+        packet_rate_display = ""
+        
+        if packet_count is not None:
+            if isinstance(packet_count, (int, float)):
+                if packet_count >= 1000:
+                    packet_count_display = f"{int(packet_count):,}+"
+                else:
+                    packet_count_display = f"{int(packet_count):,}"
+            else:
+                packet_count_display = str(packet_count)
+        
+        if packet_rate is not None and isinstance(packet_rate, (int, float)):
+            if packet_rate >= 500:
+                packet_rate_display = f"{int(packet_rate)}+"
+            elif packet_rate >= 100:
+                packet_rate_display = f"{int(packet_rate)}"
+            else:
+                packet_rate_display = f"{packet_rate:.1f}"
+        
+        # Print formatted attack alert to terminal (matching requested format)
         print("\n" + "=" * 80)
-        print(f"🚨 ATTACK DETECTED #{self.attack_count}")
+        print(f"🚨 [ATTACK #{self.attack_count}] {attack_type} detected!")
         print("=" * 80)
-        print(f"Attack Type:     {attack_type}")
+        print(f"Source: {src_ip}")
+        
+        # Display packet information if available
+        if packet_count_display and packet_rate_display:
+            print(f"Packets: {packet_count_display} | Rate: {packet_rate_display} PPS")
+        elif packet_count_display:
+            print(f"Packets: {packet_count_display}")
+        elif packet_rate_display:
+            print(f"Rate: {packet_rate_display} PPS")
+        
+        # Display additional attack-specific details
+        if attack_type == "Port Scanning":
+            port_count = attack_info.get("port_count", 0)
+            if port_count:
+                print(f"Ports Scanned: {port_count}")
+            scanned_ports = attack_info.get("scanned_ports", [])
+            if scanned_ports and len(scanned_ports) <= 20:
+                ports_str = ", ".join(map(str, scanned_ports))
+                print(f"Scanned Ports: {ports_str}")
+        
+        elif attack_type == "Ping Flood Attack":
+            icmp_count = attack_info.get("packet_count", 0)
+            if icmp_count:
+                print(f"ICMP Packets: {int(icmp_count)}")
+        
+        elif attack_type == "Brute Force Login":
+            attempt_count = attack_info.get("attempt_count", 0)
+            if attempt_count:
+                print(f"Failed Attempts: {attempt_count}")
+            usernames = attack_info.get("usernames_attempted", [])
+            if usernames:
+                print(f"Targeted Users: {', '.join(usernames[:5])}")
+        
+        print(f"Severity: {severity}")
         if attack_subtype:
-            print(f"Subtype:        {attack_subtype}")
-        print(f"Source IP:       {src_ip}")
-        print(f"Severity:        {severity}")
-        if details_str:
-            print(f"Details:         {details_str}")
+            print(f"Subtype: {attack_subtype}")
+        if protocol and protocol != "Unknown":
+            print(f"Protocol: {protocol}")
         
         # Display Shodan threat intelligence if available
         if shodan_data:
@@ -215,6 +267,17 @@ class AttackDetectionSystem:
         
         print(f"Timestamp:       {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
         print("=" * 80 + "\n")
+        
+        # Also print simplified format for quick reference
+        print(f"🚨 [ATTACK #{self.attack_count}] {attack_type} detected!")
+        print(f"Source: {src_ip}")
+        if packet_count_display and packet_rate_display:
+            print(f"Packets: {packet_count_display} | Rate: {packet_rate_display} PPS")
+        elif packet_count_display:
+            print(f"Packets: {packet_count_display}")
+        elif packet_rate_display:
+            print(f"Rate: {packet_rate_display} PPS")
+        print()  # Empty line for readability
         
         # Also log to file (include Shodan data if available)
         log_message = f"[ATTACK #{self.attack_count}] {attack_type} detected from {src_ip} (Severity: {severity}) {details_str}"

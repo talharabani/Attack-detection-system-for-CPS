@@ -4,15 +4,15 @@
       "enabled": true,
       "packet_threshold": 1000,
       "time_window_seconds": 5,
-      "icmp_threshold": 100,
-      "icmp_time_window_seconds": 3,
+      "icmp_threshold": 5,
+      "icmp_time_window_seconds": 5,
       "baseline_period_seconds": 60,
       "dynamic_threshold_multiplier": 10,
       "min_packet_size_bytes": 64,
       "ignore_localhost": true,
       "ignore_dns_traffic": true,
       "min_packets_for_alert": 50,
-      "min_icmp_packets_for_alert": 30,
+      "min_icmp_packets_for_alert": 5,
       "min_pps_for_alert": 500,
       "ip_whitelist": []
     },
@@ -110,6 +110,7 @@
     "enabled": true,
     "port": 8501,
     "refresh_interval_seconds": 3,
-    "max_attack_history": 1000
+    "max_attack_history": 1000,
+    "password": "12345"
   }
 }

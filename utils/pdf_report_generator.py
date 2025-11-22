@@ -465,21 +465,69 @@ class PDFReportGenerator:
             story.append(Paragraph(f"Attack #{i}", self.styles['CustomSubHeading']))
             
             ts = datetime.fromisoformat(attack["timestamp"]) if isinstance(attack["timestamp"], str) else attack["timestamp"]
-            details = attack.get("details", {})
             
+            # Build comprehensive attack info with all available fields
             attack_info = [
                 ["Timestamp:", ts.strftime("%Y-%m-%d %H:%M:%S")],
                 ["Attack Type:", attack.get("attack_type", "Unknown")],
+                ["Attack Subtype:", attack.get("attack_subtype", "N/A")],
                 ["Source IP:", attack.get("src_ip", "Unknown")],
+                ["Destination IP:", attack.get("dst_ip", "N/A")],
                 ["Severity:", attack.get("severity", "MEDIUM")],
+                ["Protocol:", attack.get("protocol", "Unknown")],
             ]
             
-            if details.get("packet_count"):
-                attack_info.append(["Packet Count:", str(details["packet_count"])])
-            if details.get("packet_rate"):
-                attack_info.append(["Packet Rate:", f"{details['packet_rate']:.2f} PPS"])
-            if details.get("protocol"):
-                attack_info.append(["Protocol:", details["protocol"]])
+            # Packet statistics
+            if attack.get("packet_count"):
+                attack_info.append(["Packet Count:", f"{int(attack['packet_count']):,}"])
+            packet_rate = attack.get("packet_rate") or attack.get("packet_rate_pps")
+            if packet_rate:
+                attack_info.append(["Packet Rate:", f"{float(packet_rate):.2f} PPS"])
+            
+            # Time window
+            if attack.get("time_window"):
+                attack_info.append(["Time Window:", f"{attack['time_window']} seconds"])
+            
+            # Port scanning details
+            if attack.get("port_count"):
+                attack_info.append(["Ports Scanned:", str(attack["port_count"])])
+            if attack.get("scan_rate"):
+                attack_info.append(["Scan Rate:", f"{attack['scan_rate']:.2f} ports/sec"])
+            if attack.get("scanned_ports"):
+                ports = attack["scanned_ports"]
+                if len(ports) <= 20:
+                    ports_str = ", ".join(map(str, ports))
+                else:
+                    ports_str = ", ".join(map(str, ports[:20])) + f" (+{len(ports)-20} more)"
+                attack_info.append(["Scanned Ports:", ports_str])
+            
+            # Threshold information
+            if attack.get("threshold_pps"):
+                attack_info.append(["Threshold PPS:", f"{attack['threshold_pps']:.2f}"])
+            if attack.get("baseline_pps"):
+                attack_info.append(["Baseline PPS:", f"{attack['baseline_pps']:.2f}"])
+            
+            # Shodan intelligence
+            shodan_data = attack.get("shodan_data", {})
+            if shodan_data:
+                ip_info = shodan_data.get("ip_info", {})
+                if ip_info:
+                    if ip_info.get("org"):
+                        attack_info.append(["Organization:", ip_info["org"]])
+                    if ip_info.get("isp"):
+                        attack_info.append(["ISP:", ip_info["isp"]])
+                    location = ip_info.get("location", {})
+                    if location:
+                        loc_str = location.get("country", "")
+                        if location.get("city"):
+                            loc_str += f", {location['city']}"
+                        attack_info.append(["Location:", loc_str])
+                    if ip_info.get("open_ports"):
+                        attack_info.append(["Open Ports:", f"{len(ip_info['open_ports'])} ports"])
+                    if ip_info.get("vulnerabilities"):
+                        attack_info.append(["Vulnerabilities:", f"{len(ip_info['vulnerabilities'])} CVEs"])
+                if shodan_data.get("threat_level"):
+                    attack_info.append(["Threat Level:", shodan_data["threat_level"]])
             
             info_table = Table(attack_info, colWidths=[2*inch, 4*inch])
             info_table.setStyle(TableStyle([
@@ -510,8 +558,7 @@ class PDFReportGenerator:
         total_ports = 0
         
         for attack in attacks:
-            details = attack.get("details", {})
-            shodan_data = details.get("shodan_data")
+            shodan_data = attack.get("shodan_data", {})
             if shodan_data:
                 ip_info = shodan_data.get("ip_info", {})
                 if ip_info:

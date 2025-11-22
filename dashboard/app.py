@@ -17,6 +17,7 @@ import hashlib
 from pathlib import Path
 import sys
 import psutil
+import html
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -64,16 +65,18 @@ st.markdown("""
     /* Import Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     
-    /* Color Palette */
+    /* Color Palette - Dark Theme */
     :root {
-        --color-primary: #CCD5AE;
-        --color-secondary: #E9EDC9;
-        --color-cream: #FEFAE0;
-        --color-beige: #FAEDCD;
-        --color-tan: #D4A373;
-        --color-dark: #5a5a5a;
-        --color-text: #2d3436;
-        --color-text-light: #636e72;
+        --bg-primary: #121212;
+        --bg-secondary: #1a1a1a;
+        --text-primary: #E0E0E0;
+        --text-secondary: #B0B0B0;
+        --border-color: #444444;
+        --accent-color: #888888;
+        --color-primary: #888888;
+        --color-secondary: #444444;
+        --color-text: #E0E0E0;
+        --color-text-light: #B0B0B0;
     }
     
     /* Global Styles */
@@ -81,12 +84,10 @@ st.markdown("""
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
-    /* Main App Background - Beautiful Warm Gradient */
+    /* Main App Background - Dark Theme */
     .stApp {
-        background: linear-gradient(-45deg, #FEFAE0 0%, #FAEDCD 25%, #E9EDC9 50%, #CCD5AE 75%, #FAEDCD 100%);
-        background-size: 400% 400%;
-        animation: gradientShift 20s ease infinite;
-        color: var(--color-text);
+        background: #121212;
+        color: var(--text-primary);
         min-height: 100vh;
     }
     
@@ -101,18 +102,15 @@ st.markdown("""
     footer { visibility: hidden; }
     header { visibility: hidden; }
     
-    /* Modern Header with Beautiful Gradient */
+    /* Modern Header - Dark Theme */
     .main-header {
         font-size: 3.5rem;
         font-weight: 900;
-        background: linear-gradient(135deg, #D4A373 0%, #CCD5AE 50%, #D4A373 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--text-primary);
         text-align: center;
         padding: 2rem 1rem;
         margin-bottom: 2rem;
-        text-shadow: 0 0 40px rgba(212, 163, 115, 0.3);
+        text-shadow: 0 0 20px rgba(136, 136, 136, 0.3);
         animation: pulse 2s ease-in-out infinite;
         letter-spacing: -0.02em;
     }
@@ -122,37 +120,39 @@ st.markdown("""
         50% { transform: scale(1.02); }
     }
     
-    /* Glassmorphism Cards with Warm Tones */
+    /* Glassmorphism Cards - Dark Theme */
     .glass-card {
-        background: rgba(254, 250, 224, 0.7);
+        background: rgba(26, 26, 26, 0.9);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(212, 163, 115, 0.3);
+        border: 1px solid var(--border-color);
         border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 8px 32px 0 rgba(212, 163, 115, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--text-primary);
     }
     
     .glass-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 12px 48px 0 rgba(212, 163, 115, 0.3);
-        border-color: rgba(212, 163, 115, 0.5);
+        box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.7);
+        border-color: var(--accent-color);
     }
     
-    /* Attack Card Styling - Beautiful Warm Design */
+    /* Attack Card Styling - Dark Theme */
     .attack-card {
-        background: linear-gradient(135deg, rgba(254, 250, 224, 0.95) 0%, rgba(250, 237, 205, 0.95) 100%);
+        background: rgba(26, 26, 26, 0.95);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(212, 163, 115, 0.4);
+        border: 1px solid var(--border-color);
         border-left: 6px solid;
         border-radius: 16px;
         padding: 1.5rem;
         margin: 1rem 0;
-        box-shadow: 0 8px 32px rgba(212, 163, 115, 0.25);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
+        color: var(--text-primary);
     }
     
     .attack-card::before {
@@ -177,17 +177,18 @@ st.markdown("""
         opacity: 1;
     }
     
-    /* Metric Cards - Elegant Design */
+    /* Metric Cards - Dark Theme */
     .metric-card {
-        background: rgba(254, 250, 224, 0.8);
+        background: rgba(26, 26, 26, 0.9);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(212, 163, 115, 0.3);
+        border: 1px solid var(--border-color);
         border-radius: 16px;
         padding: 1.5rem;
         text-align: center;
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        color: var(--text-primary);
     }
     
     .metric-card::before {
@@ -197,14 +198,14 @@ st.markdown("""
         left: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(212, 163, 115, 0.15) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(136, 136, 136, 0.1) 0%, transparent 70%);
         opacity: 0;
         transition: opacity 0.3s;
     }
     
     .metric-card:hover {
         transform: scale(1.05);
-        border-color: rgba(212, 163, 115, 0.6);
+        border-color: var(--accent-color);
     }
     
     .metric-card:hover::before {
@@ -214,31 +215,29 @@ st.markdown("""
     .metric-value {
         font-size: 2.5rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #D4A373 0%, #CCD5AE 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--text-primary);
         margin: 0.5rem 0;
     }
     
     .metric-label {
         font-size: 0.9rem;
-        color: var(--color-text-light);
+        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         font-weight: 600;
     }
     
-    /* Buttons - Warm and Inviting */
+    /* Buttons - Dark Theme */
     .stButton > button {
-        background: linear-gradient(135deg, #D4A373 0%, #CCD5AE 100%);
-        color: white;
-        border: none;
+        background: var(--accent-color);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 0.75rem 2rem;
         font-weight: 600;
         font-size: 1rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 20px rgba(212, 163, 115, 0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         width: 100%;
         position: relative;
         overflow: hidden;
@@ -252,15 +251,16 @@ st.markdown("""
         width: 0;
         height: 0;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
         transform: translate(-50%, -50%);
         transition: width 0.6s, height 0.6s;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(212, 163, 115, 0.6);
-        background: linear-gradient(135deg, #CCD5AE 0%, #D4A373 100%);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+        background: #999999;
+        border-color: var(--accent-color);
     }
     
     .stButton > button:hover::before {
@@ -268,31 +268,31 @@ st.markdown("""
         height: 300px;
     }
     
-    /* Sidebar - Soft and Elegant */
+    /* Sidebar - Dark Theme */
     [data-testid="stSidebar"] {
-        background: rgba(254, 250, 224, 0.9);
+        background: rgba(26, 26, 26, 0.95);
         backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(212, 163, 115, 0.3);
+        border-right: 1px solid var(--border-color);
     }
     
-    /* Selectbox and Input - Beautiful Styling */
+    /* Selectbox and Input - Dark Styling */
     .stSelectbox > div > div {
-        background: rgba(250, 237, 205, 0.8);
-        border: 1px solid rgba(212, 163, 115, 0.4);
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
     .stTextInput > div > div > input {
-        background: rgba(250, 237, 205, 0.8);
-        border: 1px solid rgba(212, 163, 115, 0.4);
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
-    /* Progress Bars - Warm Gradient */
+    /* Progress Bars - Dark Theme */
     .stProgress > div > div > div {
-        background: linear-gradient(90deg, #D4A373 0%, #CCD5AE 100%);
+        background: var(--accent-color);
         border-radius: 10px;
     }
     
@@ -319,12 +319,12 @@ st.markdown("""
     }
     
     .severity-medium {
-        background: linear-gradient(135deg, #D4A373 0%, #b8946f 100%);
+        background: linear-gradient(135deg, #888888 0%, #666666 100%);
     }
     
     .severity-low {
-        background: linear-gradient(135deg, #CCD5AE 0%, #a8b88a 100%);
-        color: var(--color-text);
+        background: linear-gradient(135deg, #666666 0%, #555555 100%);
+        color: var(--text-primary);
     }
     
     @keyframes glow {
@@ -359,39 +359,37 @@ st.markdown("""
     h2 {
         font-size: 1.8rem;
         margin-bottom: 1.5rem;
-        background: linear-gradient(135deg, #D4A373 0%, #CCD5AE 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--text-primary);
     }
     
-    /* Scrollbar - Warm Design */
+    /* Scrollbar - Dark Design */
     ::-webkit-scrollbar {
         width: 10px;
     }
     
     ::-webkit-scrollbar-track {
-        background: rgba(250, 237, 205, 0.5);
+        background: rgba(26, 26, 26, 0.8);
         border-radius: 10px;
     }
     
     ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #D4A373 0%, #CCD5AE 100%);
+        background: var(--accent-color);
         border-radius: 10px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, #CCD5AE 0%, #D4A373 100%);
+        background: #999999;
     }
     
-    /* Notification Banner - Soft and Inviting */
+    /* Notification Banner - Dark Theme */
     .notification-banner {
-        background: linear-gradient(135deg, rgba(204, 213, 174, 0.4) 0%, rgba(233, 237, 201, 0.4) 100%);
-        border: 1px solid rgba(212, 163, 115, 0.5);
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 1rem;
         margin: 1rem 0;
         animation: slideIn 0.5s ease-out;
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
     @keyframes slideIn {
@@ -405,57 +403,93 @@ st.markdown("""
         }
     }
     
-    /* Info Boxes - Warm Tones */
+    /* Info Boxes - Dark Theme */
     .stInfo {
-        background: rgba(233, 237, 201, 0.6);
-        border-left: 4px solid #CCD5AE;
+        background: rgba(26, 26, 26, 0.9);
+        border-left: 4px solid var(--accent-color);
         border-radius: 8px;
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
     .stSuccess {
-        background: rgba(204, 213, 174, 0.6);
+        background: rgba(26, 26, 26, 0.9);
         border-left: 4px solid #27ae60;
         border-radius: 8px;
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
     .stError {
-        background: rgba(250, 237, 205, 0.8);
+        background: rgba(26, 26, 26, 0.9);
         border-left: 4px solid #e74c3c;
         border-radius: 8px;
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
     .stWarning {
-        background: rgba(254, 250, 224, 0.8);
-        border-left: 4px solid #D4A373;
+        background: rgba(26, 26, 26, 0.9);
+        border-left: 4px solid var(--accent-color);
         border-radius: 8px;
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
-    /* Chart Containers - Elegant Background */
+    /* Chart Containers - Dark Background */
     .js-plotly-plot {
-        background: rgba(254, 250, 224, 0.5);
+        background: rgba(26, 26, 26, 0.8);
         border-radius: 16px;
         padding: 1rem;
-        border: 1px solid rgba(212, 163, 115, 0.3);
+        border: 1px solid var(--border-color);
     }
     
     /* Text Colors for Better Readability */
     p, span, div, label {
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
     /* Markdown Text */
     .stMarkdown {
-        color: var(--color-text);
+        color: var(--text-primary);
     }
     
     /* Dataframe Styling */
     .dataframe {
-        background: rgba(254, 250, 224, 0.7);
-        border: 1px solid rgba(212, 163, 115, 0.3);
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    /* Packet Log Terminal Style */
+    .packet-log {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        padding: 1rem;
+        border-radius: 8px;
+        max-height: 500px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+    }
+    
+    .packet-entry {
+        padding: 0.3rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .packet-entry:hover {
+        background: rgba(136, 136, 136, 0.1);
+    }
+    
+    .packet-time {
+        color: var(--accent-color);
+    }
+    
+    .packet-protocol {
+        color: var(--text-primary);
+        font-weight: bold;
+    }
+    
+    .packet-ip {
+        color: var(--text-secondary);
     }
     
     /* Responsive Design */
@@ -542,11 +576,18 @@ class DashboardData:
     def load_blocked_ips(self):
         """Load blocked IPs from active defense."""
         try:
+            # Blocked IPs are tracked separately or can be inferred from attack patterns
+            # For now, we'll track IPs that have multiple high-severity attacks
             for attack in self.attack_history:
-                if "Blocked IP" in attack["message"] or "blocked" in attack["message"].lower():
-                    ip_match = re.search(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', attack["message"])
-                    if ip_match:
-                        self.blocked_ips.add(ip_match.group(0))
+                if attack.get("severity") in ["CRITICAL", "HIGH"]:
+                    src_ip = attack.get("src_ip")
+                    if src_ip and src_ip != "Unknown":
+                        # Count attacks from this IP
+                        ip_attack_count = sum(1 for a in self.attack_history 
+                                            if a.get("src_ip") == src_ip and 
+                                            a.get("severity") in ["CRITICAL", "HIGH"])
+                        if ip_attack_count >= 3:  # Block IPs with 3+ high severity attacks
+                            self.blocked_ips.add(src_ip)
         except Exception as e:
             pass
     
@@ -824,10 +865,33 @@ class DashboardData:
 
 
 # Initialize dashboard data
-if 'dashboard_data' not in st.session_state:
-    st.session_state.dashboard_data = DashboardData()
-
-dashboard_data = st.session_state.dashboard_data
+try:
+    if 'dashboard_data' not in st.session_state:
+        st.session_state.dashboard_data = DashboardData()
+    
+    dashboard_data = st.session_state.dashboard_data
+except Exception as e:
+    st.error(f"❌ **Failed to initialize dashboard data:** {str(e)}")
+    st.exception(e)
+    # Create a minimal dashboard_data to prevent further errors
+    class MinimalDashboardData:
+        def __init__(self):
+            self.attack_history = []
+            self.blocked_ips = set()
+            self.last_attack_count = 0
+        def load_attack_history(self): pass
+        def load_blocked_ips(self): pass
+        def get_all_attacks(self): return []
+        def get_attack_stats(self):
+            return {"total_attacks": 0, "today_attacks": 0, "high_severity": 0, 
+                   "critical_severity": 0, "blocked_ips": 0, "attack_types": {}}
+        def get_traffic_data(self, minutes=30): return []
+        def get_pps_data(self, minutes=30): return []
+        def get_per_ip_traffic(self, minutes=30): return []
+        def get_protocol_breakdown(self): return {"counts": {}, "packets": {}}
+        def get_attacker_profile(self, ip): return None
+    
+    dashboard_data = MinimalDashboardData()
 
 
 def render_attack_card(attack, index=None):
@@ -871,8 +935,8 @@ def render_attack_card(attack, index=None):
     severity_colors = {
         "CRITICAL": "#e74c3c",
         "HIGH": "#e67e22",
-        "MEDIUM": "#D4A373",
-        "LOW": "#CCD5AE"
+        "MEDIUM": "#888888",
+        "LOW": "#B0B0B0"
     }
     severity_icons = {
         "CRITICAL": "🚨",
@@ -880,7 +944,7 @@ def render_attack_card(attack, index=None):
         "MEDIUM": "🟠",
         "LOW": "🟡"
     }
-    sev_color = severity_colors.get(severity, "#667eea")
+    sev_color = severity_colors.get(severity, "#888888")
     sev_icon = severity_icons.get(severity, "⚪")
     
     time_ago = datetime.now() - timestamp
@@ -913,24 +977,24 @@ def render_attack_card(attack, index=None):
     escaped_timestamp = escape_html(timestamp.strftime('%B %d, %Y at %I:%M:%S %p'))
     escaped_time_str = escape_html(time_str)
     
-    # Build HTML with escaped values - using darker colors for light background
-    attack_subtype_html = f'<div style="color: #636e72; font-size: 0.9rem; margin-bottom: 0.5rem;">{escaped_subtype}</div>' if attack_subtype else ''
-    packet_count_html = f'<div><div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.3rem;">Packets</div><div style="font-size: 1.1rem; font-weight: 600; color: #2d3436;">{escaped_packet_count}</div></div>' if packet_count_str else ''
-    packet_rate_html = f'<div><div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.3rem;">Rate</div><div style="font-size: 1.1rem; font-weight: 600; color: #2d3436;">{escaped_packet_rate}</div></div>' if packet_rate_str else ''
+    # Build HTML with escaped values - using dark theme colors
+    attack_subtype_html = f'<div style="color: #B0B0B0; font-size: 0.9rem; margin-bottom: 0.5rem;">{escaped_subtype}</div>' if attack_subtype else ''
+    packet_count_html = f'<div><div style="color: #B0B0B0; font-size: 0.85rem; margin-bottom: 0.3rem;">Packets</div><div style="font-size: 1.1rem; font-weight: 600; color: #E0E0E0;">{escaped_packet_count}</div></div>' if packet_count_str else ''
+    packet_rate_html = f'<div><div style="color: #B0B0B0; font-size: 0.85rem; margin-bottom: 0.3rem;">Rate</div><div style="font-size: 1.1rem; font-weight: 600; color: #E0E0E0;">{escaped_packet_rate}</div></div>' if packet_rate_str else ''
     
     # Build HTML content as a single string - use format() for better control
     html_template = """<div class="attack-card" style="border-left-color: {color};">
 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
 <div>
-<div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; color: #2d3436;">{icon} {attack_type}</div>
+<div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; color: #E0E0E0;">{icon} {attack_type}</div>
 {subtype}
-<div style="color: #636e72; font-size: 0.85rem;">{timestamp} • {time_ago}</div>
+<div style="color: #B0B0B0; font-size: 0.85rem;">{timestamp} • {time_ago}</div>
 </div>
 <span class="severity-badge severity-{severity_lower}" style="background: linear-gradient(135deg, {color} 0%, {color}dd 100%); padding: 0.4rem 1rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: white;">{severity}</span>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
-<div><div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.3rem;">Source IP</div><div style="font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #D4A373;">{src_ip}</div></div>
-<div><div style="color: #636e72; font-size: 0.85rem; margin-bottom: 0.3rem;">Protocol</div><div style="font-size: 1.1rem; font-weight: 600; color: #2d3436;">{protocol}</div></div>
+<div><div style="color: #B0B0B0; font-size: 0.85rem; margin-bottom: 0.3rem;">Source IP</div><div style="font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #888888;">{src_ip}</div></div>
+<div><div style="color: #B0B0B0; font-size: 0.85rem; margin-bottom: 0.3rem;">Protocol</div><div style="font-size: 1.1rem; font-weight: 600; color: #E0E0E0;">{protocol}</div></div>
 {packet_count}
 {packet_rate}
 </div>
@@ -1045,8 +1109,52 @@ def render_attack_card(attack, index=None):
                     st.caption(f"... and {len(services) - 5} more services")
 
 
+def check_password():
+    """Check if user is authenticated."""
+    # Check if password is set in config
+    try:
+        config = load_config()
+        dashboard_config = config.get("dashboard", {})
+        password = dashboard_config.get("password")
+        
+        # If no password is set, allow access (for first-time setup)
+        if not password:
+            return True
+        
+        # Check session state for authentication
+        if "authenticated" in st.session_state and st.session_state.authenticated:
+            return True
+        
+        # Show password input
+        st.markdown("""
+        <div style="text-align: center; padding: 4rem 2rem;">
+            <h1>🔒 Dashboard Access</h1>
+            <p style="color: var(--text-secondary);">Please enter the dashboard password to continue</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            entered_password = st.text_input("Password", type="password", key="password_input")
+            if st.button("Login", use_container_width=True, key="login_btn"):
+                if entered_password == password:
+                    st.session_state.authenticated = True
+                    st.rerun()
+                else:
+                    st.error("❌ Incorrect password")
+        
+        return False
+    except Exception as e:
+        # If config loading fails, allow access (fallback)
+        return True
+
+
 def main():
     """Main dashboard application."""
+    
+    # Check authentication
+    if not check_password():
+        return
     
     # Modern Header
     st.markdown(
@@ -1063,7 +1171,7 @@ def main():
         )
     with col_time:
         st.markdown(
-            f'<div style="text-align: right; color: #636e72; font-size: 0.9rem;">{datetime.now().strftime("%B %d, %Y • %I:%M:%S %p")}</div>',
+            f'<div style="text-align: right; color: #B0B0B0; font-size: 0.9rem;">{datetime.now().strftime("%B %d, %Y • %I:%M:%S %p")}</div>',
             unsafe_allow_html=True
         )
     
@@ -1105,21 +1213,24 @@ def main():
         except:
             pass
     
-    # Load fresh data
+    # Load fresh data (always reload to get latest attacks)
     dashboard_data.load_attack_history()
+    dashboard_data.load_blocked_ips()
     stats = dashboard_data.get_attack_stats()
     
-    # Check for new attacks
+    # Check for new attacks and auto-refresh if enabled
     current_attack_count = len(dashboard_data.get_all_attacks())
     if current_attack_count > dashboard_data.last_attack_count:
         new_attacks = current_attack_count - dashboard_data.last_attack_count
         st.markdown(
-            f'<div class="notification-banner">🆕 <strong>{new_attacks} new attack(s) detected!</strong> Refreshing...</div>',
+            f'<div class="notification-banner">🆕 <strong>{new_attacks} new attack(s) detected!</strong> Dashboard updated automatically.</div>',
             unsafe_allow_html=True
         )
         dashboard_data.last_attack_count = current_attack_count
-        time.sleep(0.3)
-        st.rerun()
+        # Auto-refresh if enabled to show new attacks immediately
+        if auto_refresh:
+            time.sleep(0.5)  # Small delay to ensure data is saved
+            st.rerun()
     
     # TAB 1: Main Dashboard
     with tab1:
@@ -1160,7 +1271,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
             <div class="metric-card">
                 <div class="metric-label">Total Attacks</div>
                 <div class="metric-value">{stats["total_attacks"]}</div>
-                <div style="color: #636e72; font-size: 0.8rem;">+{stats["today_attacks"]} today</div>
+                <div style="color: #B0B0B0; font-size: 0.8rem;">+{stats["today_attacks"]} today</div>
             </div>
             """,
             unsafe_allow_html=True
@@ -1172,7 +1283,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
             <div class="metric-card">
                 <div class="metric-label">Today</div>
                 <div class="metric-value">{stats["today_attacks"]}</div>
-                <div style="color: #636e72; font-size: 0.8rem;">attacks</div>
+                <div style="color: #B0B0B0; font-size: 0.8rem;">attacks</div>
             </div>
             """,
             unsafe_allow_html=True
@@ -1184,7 +1295,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
             <div class="metric-card">
                 <div class="metric-label">Critical</div>
                 <div class="metric-value" style="color: #e74c3c;">{stats["critical_severity"]}</div>
-                <div style="color: #636e72; font-size: 0.8rem;">severity</div>
+                <div style="color: #B0B0B0; font-size: 0.8rem;">severity</div>
             </div>
             """,
             unsafe_allow_html=True
@@ -1196,7 +1307,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
             <div class="metric-card">
                 <div class="metric-label">High Severity</div>
                 <div class="metric-value" style="color: #e67e22;">{stats["high_severity"]}</div>
-                <div style="color: #636e72; font-size: 0.8rem;">attacks</div>
+                <div style="color: #B0B0B0; font-size: 0.8rem;">attacks</div>
             </div>
             """,
             unsafe_allow_html=True
@@ -1234,7 +1345,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
             
             if timeline_data:
                 df_timeline = pd.DataFrame(timeline_data)
-                color_map = {"CRITICAL": "#e74c3c", "HIGH": "#e67e22", "MEDIUM": "#D4A373", "LOW": "#CCD5AE"}
+                color_map = {"CRITICAL": "#e74c3c", "HIGH": "#e67e22", "MEDIUM": "#888888", "LOW": "#B0B0B0"}
                 
                 fig_timeline = go.Figure()
                 for severity in df_timeline["Severity"].unique():
@@ -1244,7 +1355,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
                         y=[severity] * len(df_sev),
                         mode='markers',
                         name=severity,
-                        marker=dict(size=15, color=color_map.get(severity, "#D4A373"), line=dict(width=2, color='white')),
+                        marker=dict(size=15, color=color_map.get(severity, "#888888"), line=dict(width=2, color='#E0E0E0')),
                         hovertemplate='<b>%{text}</b><br>Time: %{x}<br>Severity: %{y}<extra></extra>',
                         text=[f"{row['Attack Type']} from {row['IP']}" for _, row in df_sev.iterrows()]
                     ))
@@ -1254,10 +1365,10 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
                     xaxis_title="Time",
                     yaxis_title="Severity",
                     height=400,
-                    plot_bgcolor='rgba(254, 250, 224, 0.3)',
-                    paper_bgcolor='rgba(254, 250, 224, 0.1)',
-                    font=dict(color='#2d3436', size=12),
-                    legend=dict(bgcolor='rgba(254, 250, 224, 0.8)', bordercolor='rgba(212, 163, 115, 0.3)'),
+                    plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                    paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                    font=dict(color='#E0E0E0', size=12),
+                    legend=dict(bgcolor='rgba(26, 26, 26, 0.9)', bordercolor='#444444'),
                     margin=dict(l=0, r=0, t=0, b=0)
                 )
                 st.plotly_chart(fig_timeline, use_container_width=True)
@@ -1275,12 +1386,12 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
                 values="Count",
                 names="Attack Type",
                 hole=0.4,
-                color_discrete_sequence=['#D4A373', '#CCD5AE', '#E9EDC9', '#e67e22', '#e74c3c', '#27ae60']
+                color_discrete_sequence=['#888888', '#B0B0B0', '#E0E0E0', '#444444', '#e67e22', '#e74c3c', '#27ae60']
             )
             fig_types.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white', size=12),
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
                 margin=dict(l=0, r=0, t=0, b=0),
                 showlegend=True
             )
@@ -1297,9 +1408,9 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
                     x=df_traffic["Time"],
                     y=df_traffic["Packets/sec"],
                     name="Packets/sec",
-                    line=dict(color='#D4A373', width=3),
+                    line=dict(color='#888888', width=3),
                     fill='tonexty',
-                    fillcolor='rgba(212, 163, 115, 0.2)'
+                    fillcolor='rgba(136, 136, 136, 0.2)'
                 ))
                 
                 attack_times = [t["Time"] for t in traffic_data if t["Attacks"] > 0]
@@ -1311,15 +1422,15 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
                         y=attack_packets,
                         mode='markers',
                         name="Attacks",
-                        marker=dict(size=18, color='#e74c3c', symbol='x', line=dict(width=2, color='white'))
+                        marker=dict(size=18, color='#e74c3c', symbol='x', line=dict(width=2, color='#E0E0E0'))
                     ))
                 
                 fig_traffic.update_layout(
                     height=350,
-                    plot_bgcolor='rgba(254, 250, 224, 0.3)',
-                    paper_bgcolor='rgba(254, 250, 224, 0.1)',
-                    font=dict(color='#2d3436', size=12),
-                    legend=dict(bgcolor='rgba(254, 250, 224, 0.8)'),
+                    plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                    paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                    font=dict(color='#E0E0E0', size=12),
+                    legend=dict(bgcolor='rgba(26, 26, 26, 0.9)'),
                     margin=dict(l=0, r=0, t=0, b=0)
                 )
                 st.plotly_chart(fig_traffic, use_container_width=True)
@@ -1360,7 +1471,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
         
         if recent_attacks:
             st.markdown(
-                f'<div style="color: #636e72; margin-bottom: 1rem; font-size: 0.9rem;">📊 Showing {len(recent_attacks)} of {len(dashboard_data.get_all_attacks())} total</div>',
+                f'<div style="color: #B0B0B0; margin-bottom: 1rem; font-size: 0.9rem;">📊 Showing {len(recent_attacks)} of {len(dashboard_data.get_all_attacks())} total</div>',
                 unsafe_allow_html=True
             )
             
@@ -1434,7 +1545,7 @@ def render_main_dashboard(dashboard_data, stats, show_traffic, show_connections,
     # Footer
     st.markdown(
         f"""
-        <div style="text-align: center; color: #636e72; padding: 2rem; margin-top: 3rem;">
+        <div style="text-align: center; color: #B0B0B0; padding: 2rem; margin-top: 3rem;">
             🛡️ RealTime Attack Detection System | Last Updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         </div>
         """,
@@ -1446,113 +1557,231 @@ def render_realtime_graphs(dashboard_data):
     """Render real-time graphs tab."""
     st.markdown("## 📈 Real-Time Graphs & Analytics")
     
+    # Check if packet visualizer is available and running
+    use_live_data = False
+    if SCAPY_AVAILABLE and PacketVisualizer and "packet_visualizer" in st.session_state:
+        visualizer = st.session_state.packet_visualizer
+        if visualizer.running:
+            use_live_data = True
+    
     # PPS Graph
     st.markdown("### 📊 Packets Per Second (PPS) Graph")
-    pps_data = dashboard_data.get_pps_data(30)
-    if pps_data:
-        df_pps = pd.DataFrame(pps_data)
-        fig_pps = go.Figure()
-        fig_pps.add_trace(go.Scatter(
-            x=df_pps["Time"],
-            y=df_pps["PPS"],
-            name="PPS",
-            line=dict(color='#667eea', width=3),
-            fill='tozeroy',
-            fillcolor='rgba(102, 126, 234, 0.2)'
-        ))
-        fig_pps.add_trace(go.Scatter(
-            x=df_pps["Time"],
-            y=df_pps["Attack Count"] * 100,
-            name="Attack Activity",
-            line=dict(color='#e74c3c', width=2, dash='dash')
-        ))
-        fig_pps.update_layout(
-            height=400,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', size=12),
-            legend=dict(bgcolor='rgba(0,0,0,0.5)'),
-            margin=dict(l=0, r=0, t=0, b=0),
-            xaxis_title="Time",
-            yaxis_title="Packets Per Second"
-        )
-        st.plotly_chart(fig_pps, use_container_width=True)
+    if use_live_data:
+        # Use live packet data
+        pps_data = visualizer.get_pps_data(minutes=30)
+        if pps_data:
+            df_pps = pd.DataFrame(pps_data)
+            fig_pps = go.Figure()
+            fig_pps.add_trace(go.Scatter(
+                x=df_pps["timestamp"],
+                y=df_pps["pps"],
+                name="PPS (Live)",
+                line=dict(color='#888888', width=3),
+                fill='tozeroy',
+                fillcolor='rgba(136, 136, 136, 0.2)',
+                mode='lines'
+            ))
+            fig_pps.update_layout(
+                height=400,
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
+                legend=dict(bgcolor='rgba(26, 26, 26, 0.9)'),
+                margin=dict(l=0, r=0, t=0, b=0),
+                xaxis_title="Time",
+                yaxis_title="Packets Per Second"
+            )
+            st.plotly_chart(fig_pps, use_container_width=True)
+        else:
+            st.info("No live PPS data yet. Start packet capture in Live Packet Visualization tab.")
     else:
-        st.info("No PPS data available")
+        # Use attack data
+        pps_data = dashboard_data.get_pps_data(30)
+        if pps_data:
+            df_pps = pd.DataFrame(pps_data)
+            fig_pps = go.Figure()
+            fig_pps.add_trace(go.Scatter(
+                x=df_pps["Time"],
+                y=df_pps["PPS"],
+                name="PPS",
+                line=dict(color='#888888', width=3),
+                fill='tozeroy',
+                fillcolor='rgba(136, 136, 136, 0.2)'
+            ))
+            if "Attack Count" in df_pps.columns:
+                fig_pps.add_trace(go.Scatter(
+                    x=df_pps["Time"],
+                    y=df_pps["Attack Count"] * 100,
+                    name="Attack Activity",
+                    line=dict(color='#e74c3c', width=2, dash='dash')
+                ))
+            fig_pps.update_layout(
+                height=400,
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
+                legend=dict(bgcolor='rgba(26, 26, 26, 0.9)'),
+                margin=dict(l=0, r=0, t=0, b=0),
+                xaxis_title="Time",
+                yaxis_title="Packets Per Second"
+            )
+            st.plotly_chart(fig_pps, use_container_width=True)
+        else:
+            st.info("No PPS data available. Start packet capture for live data.")
     
     # Per-IP Traffic Graph
     st.markdown("### 🌐 Per-IP Traffic Analysis")
-    ip_traffic = dashboard_data.get_per_ip_traffic(30)
-    if ip_traffic:
-        df_ip = pd.DataFrame(ip_traffic)
-        fig_ip = go.Figure()
-        fig_ip.add_trace(go.Bar(
-            x=df_ip["IP"],
-            y=df_ip["Total Packets"],
-            name="Total Packets",
-            marker_color='#D4A373'
-        ))
-        fig_ip.update_layout(
-            height=400,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='white', size=12),
-            xaxis_title="Source IP",
-            yaxis_title="Total Packets",
-            margin=dict(l=0, r=0, t=0, b=0)
-        )
-        st.plotly_chart(fig_ip, use_container_width=True)
-        
-        # IP Traffic Table
-        st.markdown("#### 📋 Top Attacking IPs")
-        st.dataframe(df_ip.head(20), use_container_width=True, hide_index=True)
+    if use_live_data:
+        # Use live packet data
+        top_talkers = visualizer.get_top_talkers(top_n=20)
+        if top_talkers:
+            df_ip = pd.DataFrame(top_talkers)
+            fig_ip = go.Figure()
+            fig_ip.add_trace(go.Bar(
+                x=df_ip["ip"],
+                y=df_ip["packets"],
+                name="Total Packets",
+                marker_color='#888888',
+                text=df_ip["packets"],
+                textposition='outside'
+            ))
+            fig_ip.update_layout(
+                height=400,
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
+                xaxis_title="Source IP",
+                yaxis_title="Total Packets",
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            st.plotly_chart(fig_ip, use_container_width=True)
+            
+            # IP Traffic Table
+            st.markdown("#### 📋 Top Talkers")
+            display_df = df_ip[["ip", "packets", "bytes"]].copy()
+            display_df.columns = ["IP Address", "Packets", "Bytes"]
+            display_df["Bytes"] = display_df["Bytes"].apply(lambda x: f"{x:,}")
+            st.dataframe(display_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No per-IP traffic data yet. Start capture to see live data.")
     else:
-        st.info("No per-IP traffic data available")
+        # Use attack data
+        ip_traffic = dashboard_data.get_per_ip_traffic(30)
+        if ip_traffic:
+            df_ip = pd.DataFrame(ip_traffic)
+            fig_ip = go.Figure()
+            fig_ip.add_trace(go.Bar(
+                x=df_ip["IP"],
+                y=df_ip["Total Packets"],
+                name="Total Packets",
+                marker_color='#888888'
+            ))
+            fig_ip.update_layout(
+                height=400,
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
+                xaxis_title="Source IP",
+                yaxis_title="Total Packets",
+                margin=dict(l=0, r=0, t=0, b=0)
+            )
+            st.plotly_chart(fig_ip, use_container_width=True)
+            
+            # IP Traffic Table
+            st.markdown("#### 📋 Top Attacking IPs")
+            st.dataframe(df_ip.head(20), use_container_width=True, hide_index=True)
+        else:
+            st.info("No per-IP traffic data available")
     
     # Protocol Breakdown
     st.markdown("### 🔌 Protocol Breakdown")
-    protocol_data = dashboard_data.get_protocol_breakdown()
-    if protocol_data["counts"]:
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Protocol Count Chart
-            fig_protocol_count = px.pie(
-                values=list(protocol_data["counts"].values()),
-                names=list(protocol_data["counts"].keys()),
-                title="Attacks by Protocol",
-                color_discrete_sequence=['#D4A373', '#CCD5AE', '#E9EDC9', '#e67e22']
-            )
-            fig_protocol_count.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white', size=12),
-                margin=dict(l=0, r=0, t=30, b=0)
-            )
-            st.plotly_chart(fig_protocol_count, use_container_width=True)
-        
-        with col2:
-            # Protocol Packets Chart
-            if protocol_data["packets"]:
-                fig_protocol_packets = px.bar(
-                    x=list(protocol_data["packets"].keys()),
-                    y=list(protocol_data["packets"].values()),
-                    title="Packets by Protocol",
-                    color=list(protocol_data["packets"].values()),
-                    color_continuous_scale='viridis'
+    if use_live_data:
+        # Use live packet data
+        protocol_data = visualizer.get_protocol_breakdown()
+        if protocol_data:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                fig_protocol_count = px.pie(
+                    values=list(protocol_data.values()),
+                    names=list(protocol_data.keys()),
+                    title="Packets by Protocol (Live)",
+                    color_discrete_sequence=['#888888', '#B0B0B0', '#E0E0E0', '#444444', '#e67e22']
                 )
+                fig_protocol_count.update_layout(
+                    plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                    paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                    font=dict(color='#E0E0E0', size=12),
+                    margin=dict(l=0, r=0, t=30, b=0)
+                )
+                st.plotly_chart(fig_protocol_count, use_container_width=True)
+            
+            with col2:
+                fig_protocol_packets = go.Figure()
+                fig_protocol_packets.add_trace(go.Bar(
+                    x=list(protocol_data.keys()),
+                    y=list(protocol_data.values()),
+                    marker_color='#888888',
+                    text=list(protocol_data.values()),
+                    textposition='outside'
+                ))
                 fig_protocol_packets.update_layout(
-                    plot_bgcolor='rgba(254, 250, 224, 0.3)',
-                    paper_bgcolor='rgba(254, 250, 224, 0.1)',
-                    font=dict(color='#2d3436', size=12),
+                    height=400,
+                    plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                    paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                    font=dict(color='#E0E0E0', size=12),
                     xaxis_title="Protocol",
                     yaxis_title="Total Packets",
                     margin=dict(l=0, r=0, t=30, b=0),
                     showlegend=False
                 )
                 st.plotly_chart(fig_protocol_packets, use_container_width=True)
+        else:
+            st.info("No protocol data yet. Start capture to see live data.")
     else:
-        st.info("No protocol data available")
+        # Use attack data
+        protocol_data = dashboard_data.get_protocol_breakdown()
+        if protocol_data["counts"]:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Protocol Count Chart
+                fig_protocol_count = px.pie(
+                    values=list(protocol_data["counts"].values()),
+                    names=list(protocol_data["counts"].keys()),
+                    title="Attacks by Protocol",
+                    color_discrete_sequence=['#888888', '#B0B0B0', '#E0E0E0', '#444444', '#e67e22']
+                )
+                fig_protocol_count.update_layout(
+                    plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                    paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                    font=dict(color='#E0E0E0', size=12),
+                    margin=dict(l=0, r=0, t=30, b=0)
+                )
+                st.plotly_chart(fig_protocol_count, use_container_width=True)
+            
+            with col2:
+                # Protocol Packets Chart
+                if protocol_data["packets"]:
+                    fig_protocol_packets = px.bar(
+                        x=list(protocol_data["packets"].keys()),
+                        y=list(protocol_data["packets"].values()),
+                        title="Packets by Protocol",
+                        color=list(protocol_data["packets"].values()),
+                        color_continuous_scale='viridis'
+                    )
+                    fig_protocol_packets.update_layout(
+                        plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                        paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                        font=dict(color='#E0E0E0', size=12),
+                        xaxis_title="Protocol",
+                        yaxis_title="Total Packets",
+                        margin=dict(l=0, r=0, t=30, b=0),
+                        showlegend=False
+                    )
+                    st.plotly_chart(fig_protocol_packets, use_container_width=True)
+        else:
+            st.info("No protocol data available")
     
     # Attack Timeline (Enhanced)
     st.markdown("### ⏱️ Attack Timeline")
@@ -1569,7 +1798,7 @@ def render_realtime_graphs(dashboard_data):
         
         if timeline_data:
             df_timeline = pd.DataFrame(timeline_data)
-            color_map = {"CRITICAL": "#ff1744", "HIGH": "#ff6b6b", "MEDIUM": "#ffa500", "LOW": "#4ecdc4"}
+            color_map = {"CRITICAL": "#e74c3c", "HIGH": "#e67e22", "MEDIUM": "#888888", "LOW": "#B0B0B0"}
             
             fig_timeline = go.Figure()
             for severity in df_timeline["Severity"].unique():
@@ -1581,8 +1810,8 @@ def render_realtime_graphs(dashboard_data):
                     name=severity,
                     marker=dict(
                         size=15,
-                        color=color_map.get(severity, "#D4A373"),
-                        line=dict(width=2, color='white')
+                        color=color_map.get(severity, "#888888"),
+                        line=dict(width=2, color='#E0E0E0')
                     ),
                     hovertemplate='<b>%{text}</b><br>Time: %{x}<br>PPS: %{y}<br>Severity: ' + severity + '<extra></extra>',
                     text=[f"{row['Attack Type']} from {row['IP']}" for _, row in df_sev.iterrows()]
@@ -1590,10 +1819,10 @@ def render_realtime_graphs(dashboard_data):
             
             fig_timeline.update_layout(
                 height=500,
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='white', size=12),
-                legend=dict(bgcolor='rgba(0,0,0,0.5)', bordercolor='rgba(255,255,255,0.1)'),
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
+                legend=dict(bgcolor='rgba(26, 26, 26, 0.9)', bordercolor='#444444'),
                 margin=dict(l=0, r=0, t=0, b=0),
                 xaxis_title="Time",
                 yaxis_title="Packets Per Second (PPS)"
@@ -1698,13 +1927,98 @@ def render_attacker_profiles(dashboard_data):
                 else:
                     st.info(f"Honeypot Score: {honeypot_score:.2f} - Likely Honeypot")
             
-            # Recent Attacks from this IP
-            st.markdown("### 📋 Recent Attacks from This IP")
+            # Complete Attack History from this IP
+            st.markdown("### 📋 Complete Attack History from This IP")
             ip_attacks = [a for a in all_attacks if a.get("src_ip") == selected_ip]
-            ip_attacks = sorted(ip_attacks, key=lambda x: x["timestamp"], reverse=True)[:10]
+            ip_attacks = sorted(ip_attacks, key=lambda x: x["timestamp"], reverse=True)
             
-            for attack in ip_attacks:
-                render_attack_card(attack)
+            st.info(f"📊 **{len(ip_attacks)} total attacks** from this IP")
+            
+            # Detailed Attack Table
+            if ip_attacks:
+                attack_data = []
+                for idx, attack in enumerate(ip_attacks, 1):
+                    attack_data.append({
+                        "#": idx,
+                        "Timestamp": attack["timestamp"].strftime("%Y-%m-%d %H:%M:%S") if isinstance(attack["timestamp"], datetime) else str(attack["timestamp"]),
+                        "Attack Type": attack.get("attack_type", "Unknown"),
+                        "Subtype": attack.get("attack_subtype", "N/A"),
+                        "Severity": attack.get("severity", "MEDIUM"),
+                        "Protocol": attack.get("protocol", "Unknown"),
+                        "Packet Count": f"{attack.get('packet_count', 0):,}" if attack.get('packet_count') else "N/A",
+                        "Packet Rate (PPS)": f"{attack.get('packet_rate', attack.get('packet_rate_pps', 0)):.2f}" if attack.get('packet_rate') or attack.get('packet_rate_pps') else "N/A",
+                        "Time Window (s)": f"{attack.get('time_window', 'N/A')}" if attack.get('time_window') else "N/A",
+                        "Scanned Ports": f"{len(attack.get('scanned_ports', []))} ports" if attack.get('scanned_ports') else "N/A",
+                        "Port Count": attack.get("port_count", "N/A") if attack.get("port_count") else "N/A"
+                    })
+                
+                df_attacks = pd.DataFrame(attack_data)
+                st.dataframe(df_attacks, use_container_width=True, hide_index=True, height=400)
+                
+                # Expandable detailed view for each attack
+                st.markdown("#### 🔍 Detailed Attack Information")
+                for idx, attack in enumerate(ip_attacks[:20], 1):  # Show first 20 in detail
+                    with st.expander(f"Attack #{idx}: {attack.get('attack_type', 'Unknown')} - {attack['timestamp'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(attack['timestamp'], datetime) else attack['timestamp']}"):
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("**Basic Information**")
+                            st.write(f"**Attack Type:** {attack.get('attack_type', 'Unknown')}")
+                            st.write(f"**Attack Subtype:** {attack.get('attack_subtype', 'N/A')}")
+                            st.write(f"**Severity:** {attack.get('severity', 'MEDIUM')}")
+                            st.write(f"**Protocol:** {attack.get('protocol', 'Unknown')}")
+                            st.write(f"**Timestamp:** {attack['timestamp'].strftime('%Y-%m-%d %H:%M:%S') if isinstance(attack['timestamp'], datetime) else attack['timestamp']}")
+                            
+                            if attack.get('time_window'):
+                                st.write(f"**Time Window:** {attack['time_window']} seconds")
+                            if attack.get('port_count'):
+                                st.write(f"**Port Count:** {attack['port_count']}")
+                            if attack.get('scan_rate'):
+                                st.write(f"**Scan Rate:** {attack['scan_rate']:.2f} ports/sec")
+                        
+                        with col2:
+                            st.markdown("**Traffic Statistics**")
+                            if attack.get('packet_count'):
+                                st.write(f"**Packet Count:** {attack['packet_count']:,}")
+                            if attack.get('packet_rate') or attack.get('packet_rate_pps'):
+                                rate = attack.get('packet_rate') or attack.get('packet_rate_pps', 0)
+                                st.write(f"**Packet Rate:** {rate:.2f} PPS")
+                            if attack.get('threshold_pps'):
+                                st.write(f"**Threshold:** {attack['threshold_pps']:.2f} PPS")
+                            if attack.get('baseline_pps'):
+                                st.write(f"**Baseline PPS:** {attack['baseline_pps']:.2f}")
+                            
+                            if attack.get('scanned_ports'):
+                                ports = attack['scanned_ports']
+                                if len(ports) <= 20:
+                                    st.write(f"**Scanned Ports:** {', '.join(map(str, ports))}")
+                                else:
+                                    st.write(f"**Scanned Ports:** {', '.join(map(str, ports[:20]))} ... (+{len(ports)-20} more)")
+                                    with st.expander("View All Ports"):
+                                        st.write(', '.join(map(str, ports)))
+                        
+                        # Shodan Intelligence
+                        if attack.get('shodan_data'):
+                            st.markdown("**🔍 Shodan Threat Intelligence**")
+                            shodan = attack['shodan_data']
+                            ip_info = shodan.get('ip_info', {})
+                            st.write(f"**Threat Level:** {shodan.get('threat_level', 'UNKNOWN')}")
+                            if ip_info.get('org'):
+                                st.write(f"**Organization:** {ip_info['org']}")
+                            if ip_info.get('isp'):
+                                st.write(f"**ISP:** {ip_info['isp']}")
+                            if ip_info.get('location'):
+                                loc = ip_info['location']
+                                st.write(f"**Location:** {loc.get('city', '')}, {loc.get('country', '')}")
+                        
+                        # Full attack data (JSON view)
+                        with st.expander("📄 View Raw Attack Data (JSON)"):
+                            st.json(attack)
+                
+                # Also show attack cards for visual view
+                st.markdown("#### 🎨 Visual Attack Cards")
+                for attack in ip_attacks[:10]:  # Show first 10 as cards
+                    render_attack_card(attack)
 
 
 def render_export_section(dashboard_data):
@@ -1940,6 +2254,8 @@ def render_live_packet_visualization():
     
     with col4:
         auto_refresh_viz = st.checkbox("🔄 Auto Refresh", value=True, key="auto_refresh_viz")
+        if auto_refresh_viz and visualizer.running:
+            st.caption("⏱️ Auto-refresh: 2s")
     
     # Status indicator
     if visualizer.running:
@@ -1964,8 +2280,10 @@ def render_live_packet_visualization():
     
     st.markdown("---")
     
-    # Live PPS Chart
+    # Live PPS Chart with auto-update placeholder
     st.markdown("### 📊 Live PPS (Packets Per Second) Chart")
+    pps_chart_placeholder = st.empty()
+    
     pps_data = visualizer.get_pps_data(minutes=5)
     
     if pps_data:
@@ -1975,24 +2293,24 @@ def render_live_packet_visualization():
             x=df_pps["timestamp"],
             y=df_pps["pps"],
             name="PPS",
-            line=dict(color='#D4A373', width=3),
+            line=dict(color='#888888', width=3),
             fill='tozeroy',
-            fillcolor='rgba(212, 163, 115, 0.3)',
+            fillcolor='rgba(136, 136, 136, 0.2)',
             mode='lines'
         ))
         fig_pps.update_layout(
             height=400,
-            plot_bgcolor='rgba(254, 250, 224, 0.3)',
-            paper_bgcolor='rgba(254, 250, 224, 0.1)',
-            font=dict(color='#2d3436', size=12),
+            plot_bgcolor='rgba(26, 26, 26, 0.9)',
+            paper_bgcolor='rgba(18, 18, 18, 0.9)',
+            font=dict(color='#E0E0E0', size=12),
             xaxis_title="Time",
             yaxis_title="Packets Per Second (PPS)",
             margin=dict(l=0, r=0, t=0, b=0),
             hovermode='x unified'
         )
-        st.plotly_chart(fig_pps, use_container_width=True)
+        pps_chart_placeholder.plotly_chart(fig_pps, use_container_width=True)
     else:
-        st.info("No PPS data yet. Start capture to see live data.")
+        pps_chart_placeholder.info("No PPS data yet. Start capture to see live data.")
     
     st.markdown("---")
     
@@ -2034,9 +2352,9 @@ def render_live_packet_visualization():
             
             fig_heatmap.update_layout(
                 height=500,
-                plot_bgcolor='rgba(254, 250, 224, 0.3)',
-                paper_bgcolor='rgba(254, 250, 224, 0.1)',
-                font=dict(color='#2d3436', size=10),
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=10),
                 xaxis_title="Source IP",
                 yaxis_title="Destination IP",
                 margin=dict(l=100, r=50, t=50, b=100),
@@ -2065,7 +2383,7 @@ def render_live_packet_visualization():
                 x=df_talkers["ip"],
                 y=df_talkers["packets"],
                 name="Packets",
-                marker_color='#CCD5AE',
+                marker_color='#888888',
                 text=df_talkers["packets"],
                 textposition='outside',
                 hovertemplate='<b>%{x}</b><br>Packets: %{y:,}<br>Bytes: %{customdata:,}<extra></extra>',
@@ -2074,9 +2392,9 @@ def render_live_packet_visualization():
             
             fig_talkers.update_layout(
                 height=500,
-                plot_bgcolor='rgba(254, 250, 224, 0.3)',
-                paper_bgcolor='rgba(254, 250, 224, 0.1)',
-                font=dict(color='#2d3436', size=10),
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=10),
                 xaxis_title="IP Address",
                 yaxis_title="Total Packets",
                 margin=dict(l=0, r=0, t=50, b=100),
@@ -2109,12 +2427,12 @@ def render_live_packet_visualization():
                 values=list(protocol_data.values()),
                 names=list(protocol_data.keys()),
                 title="Packets by Protocol",
-                color_discrete_sequence=['#D4A373', '#CCD5AE', '#E9EDC9', '#e67e22']
+                color_discrete_sequence=['#888888', '#B0B0B0', '#E0E0E0', '#444444', '#e67e22']
             )
             fig_protocol.update_layout(
-                plot_bgcolor='rgba(254, 250, 224, 0.3)',
-                paper_bgcolor='rgba(254, 250, 224, 0.1)',
-                font=dict(color='#2d3436', size=12),
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
                 margin=dict(l=0, r=0, t=50, b=0)
             )
             st.plotly_chart(fig_protocol, use_container_width=True)
@@ -2125,15 +2443,15 @@ def render_live_packet_visualization():
             fig_protocol_bar.add_trace(go.Bar(
                 x=list(protocol_data.keys()),
                 y=list(protocol_data.values()),
-                marker_color='#D4A373',
+                marker_color='#888888',
                 text=list(protocol_data.values()),
                 textposition='outside'
             ))
             fig_protocol_bar.update_layout(
                 height=400,
-                plot_bgcolor='rgba(254, 250, 224, 0.3)',
-                paper_bgcolor='rgba(254, 250, 224, 0.1)',
-                font=dict(color='#2d3436', size=12),
+                plot_bgcolor='rgba(26, 26, 26, 0.9)',
+                paper_bgcolor='rgba(18, 18, 18, 0.9)',
+                font=dict(color='#E0E0E0', size=12),
                 xaxis_title="Protocol",
                 yaxis_title="Packet Count",
                 margin=dict(l=0, r=0, t=50, b=0)
@@ -2142,11 +2460,66 @@ def render_live_packet_visualization():
     else:
         st.info("No protocol data yet. Start capture to see breakdown.")
     
-    # Auto-refresh indicator (non-blocking)
+    st.markdown("---")
+    
+    # Real Packet Log Display (Terminal Style)
+    st.markdown("### 📋 Real-Time Packet Log (Terminal View)")
+    st.caption("Live packet capture display - shows packets as they are captured")
+    
+    packet_log = visualizer.get_packet_log(limit=100)
+    if packet_log:
+        # Create terminal-style display with proper HTML formatting
+        log_html_parts = ['<div class="packet-log">']
+        for packet in reversed(packet_log[-50:]):  # Show last 50 packets
+            timestamp = packet["timestamp"].strftime("%H:%M:%S.%f")[:-3]
+            protocol = packet.get("protocol", "Unknown")
+            src_ip = packet.get("src_ip") or "?"
+            dst_ip = packet.get("dst_ip") or "?"
+            src_port = packet.get("src_port")
+            dst_port = packet.get("dst_port")
+            length = packet.get("length", 0)
+            
+            # Format like terminal output - handle None values properly
+            if src_port is not None and dst_port is not None:
+                connection = f"{src_ip}:{src_port} → {dst_ip}:{dst_port}"
+            elif src_ip != "?" and dst_ip != "?":
+                connection = f"{src_ip} → {dst_ip}"
+            else:
+                connection = "Unknown connection"
+            
+            # Escape HTML special characters properly
+            timestamp_esc = html.escape(str(timestamp))
+            protocol_esc = html.escape(str(protocol))
+            connection_esc = html.escape(str(connection))
+            
+            log_html_parts.append(
+                f'<div class="packet-entry">'
+                f'<span class="packet-time">[{timestamp_esc}]</span> '
+                f'<span class="packet-protocol">{protocol_esc}</span> '
+                f'<span class="packet-ip">{connection_esc}</span> '
+                f'<span style="color: #B0B0B0;">({length} bytes)</span>'
+                f'</div>'
+            )
+        log_html_parts.append('</div>')
+        log_html = ''.join(log_html_parts)
+        st.markdown(log_html, unsafe_allow_html=True)
+        
+        # Show packet count
+        st.caption(f"Showing last 50 of {len(packet_log)} captured packets")
+    else:
+        st.info("No packets captured yet. Start capture to see live packet stream.")
+    
+    # Auto-refresh when capture is running
     if auto_refresh_viz and visualizer.running:
-        st.caption("🔄 Auto-refresh enabled - Use 'Refresh Data' button to update")
-        # Don't auto-refresh automatically to prevent continuous reloading
+        import time
+        time.sleep(2)  # Wait 2 seconds
+        st.rerun()  # Refresh the page to show new packets
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        st.error(f"❌ **Critical Error:** {str(e)}")
+        st.exception(e)
+        st.info("Please check the terminal for more details and ensure all dependencies are installed.")

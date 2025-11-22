@@ -18,13 +18,22 @@ from pathlib import Path
 import sys
 import psutil
 import html
+import platform
+import logging
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from utils.helper import load_config
+# Import helper functions with reload to avoid caching issues
+import utils.helper
+import importlib
+importlib.reload(utils.helper)  # Force reload to pick up latest changes
+from utils.helper import load_config, save_config
 from utils.attack_logger import AttackLogger
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 # Import PDF report generator
 try:
@@ -506,7 +515,7 @@ st.markdown("""
 
 
 class DashboardData:
-    """Manages dashboard data and metrics."""
+    """Manages dashboard data and metrics with caching for performance."""
     
     def __init__(self):
         self.attack_history = []
@@ -518,50 +527,173 @@ class DashboardData:
         except Exception as e:
             st.error(f"Error initializing attack logger: {e}")
             self.attack_logger = None
+        
+        # Caching system for performance optimization
+        self._cache = {
+            "attack_history": {"data": None, "timestamp": None, "ttl": 3},  # 3 seconds TTL
+            "stats": {"data": None, "timestamp": None, "ttl": 5},  # 5 seconds TTL
+            "profiles": {},  # Per-IP profile cache with 10s TTL
+            "traffic_data": {"data": None, "timestamp": None, "ttl": 10},  # 10 seconds TTL
+            "pps_data": {"data": None, "timestamp": None, "ttl": 10},  # 10 seconds TTL
+            "per_ip_traffic": {"data": None, "timestamp": None, "ttl": 10},  # 10 seconds TTL
+            "protocol_breakdown": {"data": None, "timestamp": None, "ttl": 10},  # 10 seconds TTL
+        }
+        self._last_db_check = 0
+        self._db_check_interval = 2  # Check database every 2 seconds
+        
         self.load_attack_history()
         self.load_blocked_ips()
         self.last_attack_count = len(self.attack_history)
     
+    def _is_cache_valid(self, cache_key: str, ttl: float = None) -> bool:
+        """Check if cache entry is still valid with error handling."""
+        try:
+            if cache_key not in self._cache:
+                return False
+            
+            cache_entry = self._cache[cache_key]
+            if not isinstance(cache_entry, dict):
+                return False
+            
+            if "timestamp" not in cache_entry:
+                return False
+            
+            if cache_entry["data"] is None:
+                return False
+            
+            # Validate timestamp
+            timestamp = cache_entry.get("timestamp")
+            if not isinstance(timestamp, (int, float)) or timestamp <= 0:
+                return False
+            
+            ttl = ttl or cache_entry.get("ttl", 5)
+            if not isinstance(ttl, (int, float)) or ttl <= 0:
+                return False
+            
+            age = time.time() - timestamp
+            return 0 <= age < ttl
+        except (KeyError, TypeError, AttributeError, ValueError) as e:
+            # If cache is corrupted, invalidate it
+            logger.debug(f"Cache validation error for {cache_key}: {e}")
+            if cache_key in self._cache:
+                self._cache[cache_key] = {"data": None, "timestamp": None, "ttl": cache_entry.get("ttl", 5)}
+            return False
     
-    def load_attack_history(self):
-        """Load attack history from attack database."""
+    def _get_cached(self, cache_key: str):
+        """Get cached data if valid."""
+        if self._is_cache_valid(cache_key):
+            return self._cache[cache_key]["data"]
+        return None
+    
+    def _set_cached(self, cache_key: str, data):
+        """Set cached data with timestamp."""
+        if cache_key in self._cache:
+            if isinstance(self._cache[cache_key], dict) and "timestamp" in self._cache[cache_key]:
+                self._cache[cache_key]["data"] = data
+                self._cache[cache_key]["timestamp"] = time.time()
+            else:
+                # For per-IP profile cache
+                self._cache[cache_key] = data
+    
+    
+    def load_attack_history(self, force_refresh: bool = False):
+        """Load attack history from attack database with caching."""
+        # Check cache first
+        if not force_refresh:
+            cached = self._get_cached("attack_history")
+            if cached is not None:
+                self.attack_history = cached
+                return
+        
+        # Check if we should query database (throttle DB queries)
+        current_time = time.time()
+        if not force_refresh and (current_time - self._last_db_check) < self._db_check_interval:
+            # Use cached data if available
+            cached = self._get_cached("attack_history")
+            if cached is not None:
+                self.attack_history = cached
+                return
+        
         try:
             if not self.attack_logger:
                 return
             
             # Get all attacks from database
+            self._last_db_check = current_time
             db_attacks = self.attack_logger.get_all_attacks()
             
-            # Convert database format to dashboard format
+            # Convert database format to dashboard format with validation
             self.attack_history = []
             for attack in db_attacks:
-                # Parse timestamp
                 try:
-                    if isinstance(attack.get("timestamp"), str):
-                        timestamp = datetime.fromisoformat(attack["timestamp"])
-                    else:
+                    # Validate attack entry
+                    if not isinstance(attack, dict):
+                        logger.warning(f"Skipping invalid attack entry: not a dictionary")
+                        continue
+                    
+                    # Parse timestamp with validation
+                    timestamp = None
+                    try:
+                        ts_value = attack.get("timestamp")
+                        if isinstance(ts_value, str):
+                            timestamp = datetime.fromisoformat(ts_value)
+                        elif isinstance(ts_value, datetime):
+                            timestamp = ts_value
+                        else:
+                            timestamp = datetime.now()
+                    except (ValueError, TypeError, AttributeError) as e:
+                        logger.warning(f"Invalid timestamp in attack entry: {e}, using current time")
                         timestamp = datetime.now()
-                except:
-                    timestamp = datetime.now()
-                
-                # Get details
-                details = attack.get("details", {})
-                
-                # Build attack entry
-                attack_entry = {
-                    "timestamp": timestamp,
-                    "attack_type": attack.get("attack_type", "Unknown Attack"),
-                    "attack_subtype": details.get("attack_subtype", ""),
-                    "src_ip": attack.get("src_ip", "Unknown"),
-                    "severity": attack.get("severity", "MEDIUM"),
-                    "packet_count": details.get("packet_count"),
-                    "packet_rate": details.get("packet_rate"),
-                    "packet_rate_pps": details.get("packet_rate"),
-                    "protocol": details.get("protocol", "Unknown"),
-                    "shodan_data": details.get("shodan_data")
-                }
-                
-                self.attack_history.append(attack_entry)
+                    
+                    # Get details with validation
+                    details = attack.get("details", {})
+                    if not isinstance(details, dict):
+                        details = {}
+                    
+                    # Validate and sanitize IP address
+                    src_ip = attack.get("src_ip", "Unknown")
+                    if src_ip and src_ip != "Unknown":
+                        from utils.helper import is_valid_ip
+                        if not is_valid_ip(str(src_ip)):
+                            logger.warning(f"Invalid IP address in attack entry: {src_ip}")
+                            src_ip = "Unknown"
+                    
+                    # Validate severity
+                    severity = attack.get("severity", "MEDIUM")
+                    valid_severities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+                    if severity not in valid_severities:
+                        logger.warning(f"Invalid severity: {severity}, defaulting to MEDIUM")
+                        severity = "MEDIUM"
+                    
+                    # Validate numeric fields
+                    def safe_numeric(value, default=None):
+                        if value is None:
+                            return default
+                        try:
+                            if isinstance(value, (int, float)):
+                                return value if value >= 0 else default
+                            return float(value) if float(value) >= 0 else default
+                        except (ValueError, TypeError):
+                            return default
+                    
+                    # Build attack entry with validated data
+                    attack_entry = {
+                        "timestamp": timestamp,
+                        "attack_type": str(attack.get("attack_type", "Unknown Attack"))[:100],  # Limit length
+                        "attack_subtype": str(details.get("attack_subtype", ""))[:100],
+                        "src_ip": str(src_ip)[:45],  # IPv6 max length
+                        "severity": severity,
+                        "packet_count": safe_numeric(details.get("packet_count")),
+                        "packet_rate": safe_numeric(details.get("packet_rate")),
+                        "packet_rate_pps": safe_numeric(details.get("packet_rate")),
+                        "protocol": str(details.get("protocol", "Unknown"))[:20],
+                        "shodan_data": details.get("shodan_data") if isinstance(details.get("shodan_data"), dict) else None
+                    }
+                    
+                    self.attack_history.append(attack_entry)
+                except Exception as e:
+                    logger.error(f"Error processing attack entry: {e}")
+                    continue  # Skip invalid entries
             
             # Sort by timestamp (newest first)
             self.attack_history.sort(key=lambda x: x["timestamp"], reverse=True)
@@ -569,27 +701,65 @@ class DashboardData:
             # Limit to 1000 most recent
             if len(self.attack_history) > 1000:
                 self.attack_history = self.attack_history[:1000]
+            
+            # Update cache
+            self._set_cached("attack_history", self.attack_history)
+            # Invalidate dependent caches
+            self._cache["stats"]["data"] = None
+            self._cache["traffic_data"]["data"] = None
+            self._cache["pps_data"]["data"] = None
+            self._cache["per_ip_traffic"]["data"] = None
+            self._cache["protocol_breakdown"]["data"] = None
         
+        except FileNotFoundError as e:
+            logger.error(f"Attack database file not found: {e}")
+            st.warning("⚠️ Attack database not found. No attacks to display.")
+            self.attack_history = []
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in attack database: {e}")
+            st.error("❌ Attack database is corrupted. Please check the database file.")
+            self.attack_history = []
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing attack database: {e}")
+            st.error("❌ Permission denied accessing attack database. Check file permissions.")
+            self.attack_history = []
         except Exception as e:
-            st.error(f"Error loading attack history: {e}")
+            logger.error(f"Unexpected error loading attack history: {e}", exc_info=True)
+            st.error(f"❌ Error loading attack history: {e}")
+            self.attack_history = []
     
     def load_blocked_ips(self):
-        """Load blocked IPs from active defense."""
+        """Load blocked IPs from active defense with error handling."""
         try:
+            if not isinstance(self.blocked_ips, set):
+                self.blocked_ips = set()
+            
             # Blocked IPs are tracked separately or can be inferred from attack patterns
             # For now, we'll track IPs that have multiple high-severity attacks
             for attack in self.attack_history:
-                if attack.get("severity") in ["CRITICAL", "HIGH"]:
-                    src_ip = attack.get("src_ip")
-                    if src_ip and src_ip != "Unknown":
-                        # Count attacks from this IP
-                        ip_attack_count = sum(1 for a in self.attack_history 
-                                            if a.get("src_ip") == src_ip and 
-                                            a.get("severity") in ["CRITICAL", "HIGH"])
-                        if ip_attack_count >= 3:  # Block IPs with 3+ high severity attacks
-                            self.blocked_ips.add(src_ip)
+                try:
+                    if not isinstance(attack, dict):
+                        continue
+                    
+                    severity = attack.get("severity", "MEDIUM")
+                    if severity in ["CRITICAL", "HIGH"]:
+                        src_ip = attack.get("src_ip")
+                        if src_ip and src_ip != "Unknown" and isinstance(src_ip, str):
+                            from utils.helper import is_valid_ip
+                            if is_valid_ip(src_ip):
+                                # Count attacks from this IP
+                                ip_attack_count = sum(1 for a in self.attack_history 
+                                                    if isinstance(a, dict) and
+                                                    a.get("src_ip") == src_ip and 
+                                                    a.get("severity") in ["CRITICAL", "HIGH"])
+                                if ip_attack_count >= 3:  # Block IPs with 3+ high severity attacks
+                                    self.blocked_ips.add(src_ip)
+                except Exception as e:
+                    logger.debug(f"Error processing attack for blocked IPs: {e}")
+                    continue
         except Exception as e:
-            pass
+            logger.error(f"Error loading blocked IPs: {e}", exc_info=True)
+            self.blocked_ips = set()  # Reset to empty set on error
     
     def get_recent_attacks(self, limit=4):
         """Get recent attacks."""
@@ -600,62 +770,155 @@ class DashboardData:
         return self.attack_history
     
     def get_attack_stats(self):
-        """Get attack statistics."""
-        if not self.attack_history:
+        """Get attack statistics with caching and error handling."""
+        try:
+            # Check cache first
+            cached = self._get_cached("stats")
+            if cached is not None:
+                return cached
+            
+            if not self.attack_history:
+                stats = {
+                    "total_attacks": 0,
+                    "today_attacks": 0,
+                    "high_severity": 0,
+                    "critical_severity": 0,
+                    "blocked_ips": len(self.blocked_ips) if isinstance(self.blocked_ips, set) else 0,
+                    "attack_types": {}
+                }
+                self._set_cached("stats", stats)
+                return stats
+            
+            today = datetime.now().date()
+            today_attacks = 0
+            high_severity = 0
+            critical_severity = 0
+            attack_types = {}
+            
+            # Safely calculate statistics with error handling
+            for attack in self.attack_history:
+                try:
+                    # Validate attack entry before processing
+                    if not isinstance(attack, dict):
+                        continue
+                    
+                    # Count today's attacks
+                    timestamp = attack.get("timestamp")
+                    if timestamp and isinstance(timestamp, datetime):
+                        try:
+                            if timestamp.date() == today:
+                                today_attacks += 1
+                        except (AttributeError, ValueError):
+                            pass
+                    
+                    # Count severities
+                    severity = attack.get("severity", "MEDIUM")
+                    if severity == "HIGH":
+                        high_severity += 1
+                    elif severity == "CRITICAL":
+                        critical_severity += 1
+                    
+                    # Count attack types
+                    atype = str(attack.get("attack_type", "Unknown"))
+                    attack_types[atype] = attack_types.get(atype, 0) + 1
+                except Exception as e:
+                    logger.debug(f"Error processing attack for stats: {e}")
+                    continue
+            
+            stats = {
+                "total_attacks": len(self.attack_history),
+                "today_attacks": today_attacks,
+                "high_severity": high_severity,
+                "critical_severity": critical_severity,
+                "blocked_ips": len(self.blocked_ips) if isinstance(self.blocked_ips, set) else 0,
+                "attack_types": attack_types
+            }
+            
+            # Cache the result
+            self._set_cached("stats", stats)
+            return stats
+        except Exception as e:
+            logger.error(f"Error calculating attack stats: {e}", exc_info=True)
+            # Return safe default stats
             return {
                 "total_attacks": 0,
                 "today_attacks": 0,
                 "high_severity": 0,
                 "critical_severity": 0,
-                "blocked_ips": len(self.blocked_ips),
+                "blocked_ips": 0,
                 "attack_types": {}
             }
-        
-        today = datetime.now().date()
-        today_attacks = sum(1 for a in self.attack_history if a["timestamp"].date() == today)
-        high_severity = sum(1 for a in self.attack_history if a["severity"] == "HIGH")
-        critical_severity = sum(1 for a in self.attack_history if a["severity"] == "CRITICAL")
-        
-        attack_types = {}
-        for attack in self.attack_history:
-            atype = attack.get("attack_type", "Unknown")
-            attack_types[atype] = attack_types.get(atype, 0) + 1
-        
-        return {
-            "total_attacks": len(self.attack_history),
-            "today_attacks": today_attacks,
-            "high_severity": high_severity,
-            "critical_severity": critical_severity,
-            "blocked_ips": len(self.blocked_ips),
-            "attack_types": attack_types
-        }
     
     def get_traffic_data(self, minutes=30):
-        """Get traffic data for visualization."""
-        end_time = datetime.now()
-        start_time = end_time - timedelta(minutes=minutes)
-        
-        traffic_points = []
-        current_time = start_time
-        
-        while current_time <= end_time:
-            base_packets = 50
-            attacks_in_minute = sum(1 for a in self.attack_history
-                                  if start_time <= a["timestamp"] <= current_time)
-            packets = base_packets + (attacks_in_minute * 100)
+        """Get traffic data for visualization with caching and validation."""
+        try:
+            # Validate input
+            if not isinstance(minutes, (int, float)) or minutes <= 0:
+                minutes = 30
             
-            traffic_points.append({
-                "Time": current_time,
-                "Packets/sec": packets,
-                "Attacks": attacks_in_minute
-            })
+            # Check cache first
+            cache_key = f"traffic_data_{minutes}"
+            if cache_key not in self._cache:
+                self._cache[cache_key] = {"data": None, "timestamp": None, "ttl": 10}
             
-            current_time += timedelta(minutes=1)
-        
-        return traffic_points
+            cached = self._get_cached(cache_key)
+            if cached is not None:
+                return cached
+            
+            end_time = datetime.now()
+            start_time = end_time - timedelta(minutes=minutes)
+            
+            traffic_points = []
+            current_time = start_time
+            
+            while current_time <= end_time:
+                try:
+                    base_packets = 50
+                    attacks_in_minute = 0
+                    
+                    # Safely count attacks in time window
+                    for attack in self.attack_history:
+                        try:
+                            if not isinstance(attack, dict):
+                                continue
+                            timestamp = attack.get("timestamp")
+                            if timestamp and isinstance(timestamp, datetime):
+                                if start_time <= timestamp <= current_time:
+                                    attacks_in_minute += 1
+                        except Exception:
+                            continue
+                    
+                    packets = base_packets + (attacks_in_minute * 100)
+                    
+                    traffic_points.append({
+                        "Time": current_time,
+                        "Packets/sec": max(0, packets),
+                        "Attacks": attacks_in_minute
+                    })
+                    
+                    current_time += timedelta(minutes=1)
+                except Exception as e:
+                    logger.debug(f"Error processing traffic data point: {e}")
+                    break
+            
+            # Cache the result
+            self._set_cached(cache_key, traffic_points)
+            return traffic_points
+        except Exception as e:
+            logger.error(f"Error generating traffic data: {e}", exc_info=True)
+            return []
     
     def get_pps_data(self, minutes=30):
-        """Get PPS (Packets Per Second) data for real-time graph."""
+        """Get PPS (Packets Per Second) data for real-time graph with caching."""
+        # Check cache first
+        cache_key = f"pps_data_{minutes}"
+        if cache_key not in self._cache:
+            self._cache[cache_key] = {"data": None, "timestamp": None, "ttl": 10}
+        
+        cached = self._get_cached(cache_key)
+        if cached is not None:
+            return cached
+        
         end_time = datetime.now()
         start_time = end_time - timedelta(minutes=minutes)
         
@@ -691,10 +954,21 @@ class DashboardData:
             
             current_time = window_end
         
+        # Cache the result
+        self._set_cached(cache_key, pps_data)
         return pps_data
     
     def get_per_ip_traffic(self, minutes=30):
-        """Get per-IP traffic data."""
+        """Get per-IP traffic data with caching."""
+        # Check cache first
+        cache_key = f"per_ip_traffic_{minutes}"
+        if cache_key not in self._cache:
+            self._cache[cache_key] = {"data": None, "timestamp": None, "ttl": 10}
+        
+        cached = self._get_cached(cache_key)
+        if cached is not None:
+            return cached
+        
         end_time = datetime.now()
         start_time = end_time - timedelta(minutes=minutes)
         
@@ -723,7 +997,7 @@ class DashboardData:
                 ip_traffic[ip]["last_seen"] = attack["timestamp"]
         
         # Convert to list for display
-        return [
+        result = [
             {
                 "IP": ip,
                 "Total Packets": data["packet_count"],
@@ -733,9 +1007,18 @@ class DashboardData:
             }
             for ip, data in sorted(ip_traffic.items(), key=lambda x: x[1]["packet_count"], reverse=True)
         ]
+        
+        # Cache the result
+        self._set_cached(cache_key, result)
+        return result
     
     def get_protocol_breakdown(self):
-        """Get protocol breakdown statistics."""
+        """Get protocol breakdown statistics with caching."""
+        # Check cache first
+        cached = self._get_cached("protocol_breakdown")
+        if cached is not None:
+            return cached
+        
         protocol_counts = {}
         protocol_packets = {}
         
@@ -750,85 +1033,155 @@ class DashboardData:
             protocol_counts[protocol] += 1
             protocol_packets[protocol] += packet_count
         
-        return {
+        result = {
             "counts": protocol_counts,
             "packets": protocol_packets
         }
+        
+        # Cache the result
+        self._set_cached("protocol_breakdown", result)
+        return result
     
     def get_attacker_profile(self, ip: str) -> Dict:
-        """Get comprehensive attacker profile for an IP."""
-        # Get all attacks from this IP
-        ip_attacks = [a for a in self.attack_history if a.get("src_ip") == ip]
-        
-        if not ip_attacks:
-            return None
-        
-        # Get Shodan data from most recent attack
-        shodan_data = None
-        for attack in reversed(ip_attacks):
-            if attack.get("shodan_data"):
-                shodan_data = attack.get("shodan_data")
-                break
-        
-        # Calculate statistics
-        total_attacks = len(ip_attacks)
-        attack_types = {}
-        severities = {}
-        total_packets = 0
-        max_pps = 0
-        first_seen = min(a["timestamp"] for a in ip_attacks)
-        last_seen = max(a["timestamp"] for a in ip_attacks)
-        
-        for attack in ip_attacks:
-            atype = attack.get("attack_type", "Unknown")
-            severity = attack.get("severity", "MEDIUM")
-            packet_count = attack.get("packet_count", 0) or 0
-            pps = attack.get("packet_rate_pps", attack.get("packet_rate", 0)) or 0
+        """Get comprehensive attacker profile for an IP with caching and validation."""
+        try:
+            # Validate IP input
+            if not ip or not isinstance(ip, str):
+                logger.warning(f"Invalid IP address for profile lookup: {ip}")
+                return None
             
-            attack_types[atype] = attack_types.get(atype, 0) + 1
-            severities[severity] = severities.get(severity, 0) + 1
-            total_packets += packet_count
-            max_pps = max(max_pps, pps)
+            from utils.helper import is_valid_ip
+            if ip != "Unknown" and not is_valid_ip(ip):
+                logger.warning(f"Invalid IP format for profile lookup: {ip}")
+                return None
+            
+            # Check per-IP cache
+            if ip in self._cache["profiles"]:
+                profile_cache = self._cache["profiles"][ip]
+                if isinstance(profile_cache, dict) and "timestamp" in profile_cache:
+                    try:
+                        age = time.time() - profile_cache["timestamp"]
+                        if 0 <= age < 10:  # 10 second TTL for profiles
+                            cached_data = profile_cache.get("data")
+                            if cached_data is not None:
+                                return cached_data
+                    except (TypeError, ValueError):
+                        # Invalid cache entry, continue to rebuild
+                        pass
+            
+            # Get all attacks from this IP with validation
+            ip_attacks = []
+            for attack in self.attack_history:
+                try:
+                    if not isinstance(attack, dict):
+                        continue
+                    attack_ip = attack.get("src_ip")
+                    if attack_ip and str(attack_ip) == str(ip):
+                        ip_attacks.append(attack)
+                except Exception:
+                    continue
+            
+            if not ip_attacks:
+                return None
         
-        # Extract Shodan info
-        ip_info = shodan_data.get("ip_info", {}) if shodan_data else {}
-        location = ip_info.get("location", {}) if ip_info else {}
-        
-        # Determine why flagged
-        why_flagged = []
-        if total_attacks > 5:
-            why_flagged.append(f"Multiple attacks ({total_attacks} total)")
-        if max_pps > 500:
-            why_flagged.append(f"High packet rate ({max_pps:.0f} PPS)")
-        if "CRITICAL" in severities or "HIGH" in severities:
-            why_flagged.append("High severity attacks detected")
-        if ip_info.get("vulnerabilities"):
-            why_flagged.append(f"Known vulnerabilities ({len(ip_info.get('vulnerabilities', []))} CVEs)")
-        if shodan_data and shodan_data.get("threat_level") in ["HIGH", "CRITICAL"]:
-            why_flagged.append(f"Shodan threat level: {shodan_data.get('threat_level')}")
-        
-        return {
-            "ip": ip,
-            "total_attacks": total_attacks,
-            "attack_types": attack_types,
-            "severities": severities,
-            "total_packets": total_packets,
-            "max_pps": max_pps,
-            "first_seen": first_seen,
-            "last_seen": last_seen,
-            "shodan_data": shodan_data,
-            "country": location.get("country", "Unknown") if location else "Unknown",
-            "city": location.get("city", "Unknown") if location else "Unknown",
-            "isp": ip_info.get("isp", "Unknown") if ip_info else "Unknown",
-            "organization": ip_info.get("org", "Unknown") if ip_info else "Unknown",
-            "asn": ip_info.get("asn", "Unknown") if ip_info else "Unknown",
-            "open_ports": ip_info.get("open_ports", []) if ip_info else [],
-            "vulnerabilities": ip_info.get("vulnerabilities", []) if ip_info else [],
-            "honeypot_score": shodan_data.get("honeypot", {}).get("honeypot_score") if shodan_data and shodan_data.get("honeypot") else None,
-            "threat_level": shodan_data.get("threat_level", "UNKNOWN") if shodan_data else "UNKNOWN",
-            "why_flagged": why_flagged,
-            "reputation_score": self._calculate_reputation_score(ip_attacks, shodan_data)
-        }
+            # Get Shodan data from most recent attack
+            shodan_data = None
+            for attack in reversed(ip_attacks):
+                if attack.get("shodan_data"):
+                    shodan_data = attack.get("shodan_data")
+                    break
+            
+            # Calculate statistics with error handling
+            total_attacks = len(ip_attacks)
+            attack_types = {}
+            severities = {}
+            total_packets = 0
+            max_pps = 0
+            
+            # Safely get timestamps
+            timestamps = []
+            for attack in ip_attacks:
+                try:
+                    ts = attack.get("timestamp")
+                    if ts and isinstance(ts, datetime):
+                        timestamps.append(ts)
+                except Exception:
+                    continue
+            
+            if not timestamps:
+                return None
+            
+            first_seen = min(timestamps)
+            last_seen = max(timestamps)
+            
+            for attack in ip_attacks:
+                try:
+                    atype = str(attack.get("attack_type", "Unknown"))
+                    severity = str(attack.get("severity", "MEDIUM"))
+                    
+                    # Safely get numeric values
+                    packet_count = attack.get("packet_count", 0) or 0
+                    if not isinstance(packet_count, (int, float)):
+                        packet_count = 0
+                    
+                    pps = attack.get("packet_rate_pps", attack.get("packet_rate", 0)) or 0
+                    if not isinstance(pps, (int, float)):
+                        pps = 0
+                    
+                    attack_types[atype] = attack_types.get(atype, 0) + 1
+                    severities[severity] = severities.get(severity, 0) + 1
+                    total_packets += max(0, packet_count)
+                    max_pps = max(max_pps, max(0, pps))
+                except Exception as e:
+                    logger.debug(f"Error processing attack in profile: {e}")
+                    continue
+            
+            # Extract Shodan info
+            ip_info = shodan_data.get("ip_info", {}) if shodan_data else {}
+            location = ip_info.get("location", {}) if ip_info else {}
+            
+            # Determine why flagged
+            why_flagged = []
+            if total_attacks > 5:
+                why_flagged.append(f"Multiple attacks ({total_attacks} total)")
+            if max_pps > 500:
+                why_flagged.append(f"High packet rate ({max_pps:.0f} PPS)")
+            if "CRITICAL" in severities or "HIGH" in severities:
+                why_flagged.append("High severity attacks detected")
+            if ip_info.get("vulnerabilities"):
+                why_flagged.append(f"Known vulnerabilities ({len(ip_info.get('vulnerabilities', []))} CVEs)")
+            if shodan_data and shodan_data.get("threat_level") in ["HIGH", "CRITICAL"]:
+                why_flagged.append(f"Shodan threat level: {shodan_data.get('threat_level')}")
+            
+            profile = {
+                "ip": ip,
+                "total_attacks": total_attacks,
+                "attack_types": attack_types,
+                "severities": severities,
+                "total_packets": total_packets,
+                "max_pps": max_pps,
+                "first_seen": first_seen,
+                "last_seen": last_seen,
+                "shodan_data": shodan_data,
+                "country": location.get("country", "Unknown") if location else "Unknown",
+                "city": location.get("city", "Unknown") if location else "Unknown",
+                "isp": ip_info.get("isp", "Unknown") if ip_info else "Unknown",
+                "organization": ip_info.get("org", "Unknown") if ip_info else "Unknown",
+                "asn": ip_info.get("asn", "Unknown") if ip_info else "Unknown",
+                "open_ports": ip_info.get("open_ports", []) if ip_info else [],
+                "vulnerabilities": ip_info.get("vulnerabilities", []) if ip_info else [],
+                "honeypot_score": shodan_data.get("honeypot", {}).get("honeypot_score") if shodan_data and shodan_data.get("honeypot") else None,
+                "threat_level": shodan_data.get("threat_level", "UNKNOWN") if shodan_data else "UNKNOWN",
+                "why_flagged": why_flagged,
+                "reputation_score": self._calculate_reputation_score(ip_attacks, shodan_data)
+            }
+            
+            # Cache the profile
+            self._cache["profiles"][ip] = {"data": profile, "timestamp": time.time()}
+            return profile
+        except Exception as e:
+            logger.error(f"Error generating attacker profile for {ip}: {e}", exc_info=True)
+            return None
     
     def _calculate_reputation_score(self, attacks: List[Dict], shodan_data: Optional[Dict]) -> int:
         """Calculate reputation score (0-100, lower is worse)."""
@@ -1176,21 +1529,249 @@ def main():
         )
     
     # Navigation Tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📊 Dashboard", 
         "📈 Real-Time Graphs", 
         "👤 Attacker Profiles", 
         "💾 Export",
-        "📡 Live Packet Visualization"
+        "📡 Live Packet Visualization",
+        "🌍 Advanced Visualizations"
     ])
     
     # Sidebar
     with st.sidebar:
         st.markdown("### ⚙️ Settings")
         
-        auto_refresh = st.checkbox("🔄 Auto Refresh", value=True, key="auto_refresh")
-        refresh_interval = st.slider("⏱️ Refresh Interval (seconds)", 1, 10, 3, key="refresh_interval")
+        # Load current config
+        try:
+            config = load_config()
+        except:
+            config = {}
+            st.error("⚠️ Could not load config")
         
+        # Dashboard Settings
+        with st.expander("📊 Dashboard Settings", expanded=False):
+            auto_refresh = st.checkbox("🔄 Auto Refresh", value=True, key="auto_refresh")
+            refresh_interval = st.slider("⏱️ Refresh Interval (seconds)", 1, 10, 3, key="refresh_interval")
+            
+            dashboard_port = st.number_input("🌐 Dashboard Port", min_value=1024, max_value=65535, 
+                                            value=config.get("dashboard", {}).get("port", 8501), 
+                                            key="dashboard_port")
+            dashboard_password = st.text_input("🔒 Dashboard Password", 
+                                             value=config.get("dashboard", {}).get("password", ""), 
+                                             type="password", key="dashboard_password")
+            
+            if st.button("💾 Save Dashboard Settings", use_container_width=True, key="save_dashboard"):
+                try:
+                    if "dashboard" not in config:
+                        config["dashboard"] = {}
+                    config["dashboard"]["port"] = int(dashboard_port)
+                    config["dashboard"]["password"] = dashboard_password
+                    config["dashboard"]["refresh_interval_seconds"] = refresh_interval
+                    save_config(config)
+                    st.success("✅ Dashboard settings saved!")
+                except Exception as e:
+                    st.error(f"❌ Error saving: {e}")
+        
+        # Detection Settings
+        with st.expander("🔍 Detection Settings", expanded=False):
+            # DDoS Detection
+            st.markdown("#### 🚨 DDoS Detection")
+            ddos_enabled = st.checkbox("Enable DDoS Detection", 
+                                      value=config.get("detection", {}).get("ddos", {}).get("enabled", True),
+                                      key="ddos_enabled")
+            ddos_threshold = st.number_input("Packet Threshold", min_value=1, max_value=100000,
+                                            value=config.get("detection", {}).get("ddos", {}).get("packet_threshold", 1000),
+                                            key="ddos_threshold")
+            icmp_threshold = st.number_input("ICMP Ping Threshold", min_value=1, max_value=1000,
+                                            value=config.get("detection", {}).get("ddos", {}).get("icmp_threshold", 5),
+                                            key="icmp_threshold")
+            
+            # Port Scan Detection
+            st.markdown("#### 🔍 Port Scan Detection")
+            portscan_enabled = st.checkbox("Enable Port Scan Detection",
+                                          value=config.get("detection", {}).get("port_scan", {}).get("enabled", True),
+                                          key="portscan_enabled")
+            port_threshold = st.number_input("Port Threshold", min_value=1, max_value=1000,
+                                            value=config.get("detection", {}).get("port_scan", {}).get("port_threshold", 20),
+                                            key="port_threshold")
+            
+            # Brute Force Detection
+            st.markdown("#### 🔐 Brute Force Detection")
+            brute_force_enabled = st.checkbox("Enable Brute Force Detection",
+                                             value=config.get("detection", {}).get("brute_force", {}).get("enabled", True),
+                                             key="brute_force_enabled")
+            brute_force_threshold = st.number_input("Failed Attempts Threshold", min_value=1, max_value=100,
+                                                   value=config.get("detection", {}).get("brute_force", {}).get("failed_attempts_threshold", 5),
+                                                   key="brute_force_threshold")
+            
+            # Modbus Detection
+            st.markdown("#### ⚙️ Modbus Detection")
+            modbus_enabled = st.checkbox("Enable Modbus Detection",
+                                        value=config.get("detection", {}).get("modbus", {}).get("enabled", True),
+                                        key="modbus_enabled")
+            modbus_write_threshold = st.number_input("Modbus Write Threshold", min_value=1, max_value=100,
+                                                    value=config.get("detection", {}).get("modbus", {}).get("write_threshold", 5),
+                                                    key="modbus_write_threshold")
+            
+            if st.button("💾 Save Detection Settings", use_container_width=True, key="save_detection"):
+                try:
+                    if "detection" not in config:
+                        config["detection"] = {}
+                    
+                    # DDoS
+                    if "ddos" not in config["detection"]:
+                        config["detection"]["ddos"] = {}
+                    config["detection"]["ddos"]["enabled"] = ddos_enabled
+                    config["detection"]["ddos"]["packet_threshold"] = int(ddos_threshold)
+                    config["detection"]["ddos"]["icmp_threshold"] = int(icmp_threshold)
+                    
+                    # Port Scan
+                    if "port_scan" not in config["detection"]:
+                        config["detection"]["port_scan"] = {}
+                    config["detection"]["port_scan"]["enabled"] = portscan_enabled
+                    config["detection"]["port_scan"]["port_threshold"] = int(port_threshold)
+                    
+                    # Brute Force
+                    if "brute_force" not in config["detection"]:
+                        config["detection"]["brute_force"] = {}
+                    config["detection"]["brute_force"]["enabled"] = brute_force_enabled
+                    config["detection"]["brute_force"]["failed_attempts_threshold"] = int(brute_force_threshold)
+                    
+                    # Modbus
+                    if "modbus" not in config["detection"]:
+                        config["detection"]["modbus"] = {}
+                    config["detection"]["modbus"]["enabled"] = modbus_enabled
+                    config["detection"]["modbus"]["write_threshold"] = int(modbus_write_threshold)
+                    
+                    save_config(config)
+                    st.success("✅ Detection settings saved!")
+                except Exception as e:
+                    st.error(f"❌ Error saving: {e}")
+        
+        # Alert Settings
+        with st.expander("🔔 Alert Settings", expanded=False):
+            st.markdown("#### 🖥️ Desktop Alerts")
+            desktop_enabled = st.checkbox("Enable Desktop Notifications",
+                                         value=config.get("alerts", {}).get("desktop", {}).get("enabled", True),
+                                         key="desktop_enabled")
+            
+            st.divider()
+            
+            st.markdown("#### 📱 Discord Alerts")
+            discord_enabled = st.checkbox("Enable Discord Notifications",
+                                         value=config.get("alerts", {}).get("discord", {}).get("enabled", False),
+                                         key="discord_enabled")
+            
+            st.caption("💡 Configure webhook URL in `config.json` under `alerts.discord.webhook_url`")
+            
+            st.divider()
+            
+            # Action buttons in a clean horizontal layout
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("💾 Save Settings", use_container_width=True, key="save_alerts"):
+                    try:
+                        if "alerts" not in config:
+                            config["alerts"] = {}
+                        
+                        # Desktop
+                        if "desktop" not in config["alerts"]:
+                            config["alerts"]["desktop"] = {}
+                        config["alerts"]["desktop"]["enabled"] = desktop_enabled
+                        
+                        # Discord - only update enabled status, keep existing webhook URL
+                        if "discord" not in config["alerts"]:
+                            config["alerts"]["discord"] = {}
+                        config["alerts"]["discord"]["enabled"] = discord_enabled
+                        # Preserve existing webhook_url if it exists
+                        current_webhook = config.get("alerts", {}).get("discord", {}).get("webhook_url", "")
+                        if current_webhook and "webhook_url" not in config["alerts"]["discord"]:
+                            config["alerts"]["discord"]["webhook_url"] = current_webhook
+                        
+                        save_config(config)
+                        st.success("✅ Settings saved successfully!")
+                    except Exception as e:
+                        st.error(f"❌ Error: {e}")
+            
+            with col2:
+                if st.button("🧪 Test Discord", use_container_width=True, key="test_discord"):
+                    try:
+                        from alerts.discord_alert import DiscordAlert
+                        import importlib
+                        import alerts.discord_alert
+                        importlib.reload(alerts.discord_alert)
+                        
+                        discord_alert = DiscordAlert()
+                        if discord_alert.enabled and discord_alert.webhook_url:
+                            discord_alert.test_notification()
+                            st.success("✅ Test sent to Discord!")
+                        else:
+                            if not discord_alert.enabled:
+                                st.warning("⚠️ Enable Discord alerts first")
+                            else:
+                                st.warning("⚠️ Webhook URL not configured in `config.json`")
+                    except Exception as e:
+                        st.error(f"❌ Test failed: {e}")
+        
+        # Auto-Response Settings
+        with st.expander("🛡️ Auto-Response (IPS)", expanded=False):
+            auto_response_enabled = st.checkbox("Enable Auto-Response",
+                                               value=config.get("auto_response", {}).get("enabled", True),
+                                               key="auto_response_enabled")
+            auto_block = st.checkbox("Auto-Block IPs",
+                                    value=config.get("auto_response", {}).get("auto_block_ips", True),
+                                    key="auto_block")
+            auto_kill = st.checkbox("Auto-Kill Processes",
+                                  value=config.get("auto_response", {}).get("auto_kill_processes", True),
+                                  key="auto_kill")
+            block_duration = st.number_input("Block Duration (minutes)", min_value=1, max_value=1440,
+                                           value=config.get("auto_response", {}).get("block_duration_minutes", 60),
+                                           key="block_duration")
+            
+            if st.button("💾 Save Auto-Response Settings", use_container_width=True, key="save_auto_response"):
+                try:
+                    if "auto_response" not in config:
+                        config["auto_response"] = {}
+                    config["auto_response"]["enabled"] = auto_response_enabled
+                    config["auto_response"]["auto_block_ips"] = auto_block
+                    config["auto_response"]["auto_kill_processes"] = auto_kill
+                    config["auto_response"]["block_duration_minutes"] = int(block_duration)
+                    save_config(config)
+                    st.success("✅ Auto-response settings saved!")
+                except Exception as e:
+                    st.error(f"❌ Error saving: {e}")
+        
+        # General Settings
+        with st.expander("⚙️ General Settings", expanded=False):
+            log_level = st.selectbox("Log Level",
+                                    ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                                    index=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"].index(
+                                        config.get("general", {}).get("log_level", "INFO")),
+                                    key="log_level")
+            log_file = st.text_input("Log File",
+                                    value=config.get("general", {}).get("log_file", "attack_detection.log"),
+                                    key="log_file")
+            debug_mode = st.checkbox("Debug Mode",
+                                   value=config.get("general", {}).get("debug", False),
+                                   key="debug_mode")
+            
+            if st.button("💾 Save General Settings", use_container_width=True, key="save_general"):
+                try:
+                    if "general" not in config:
+                        config["general"] = {}
+                    config["general"]["log_level"] = log_level
+                    config["general"]["log_file"] = log_file
+                    config["general"]["debug"] = debug_mode
+                    save_config(config)
+                    st.success("✅ General settings saved!")
+                except Exception as e:
+                    st.error(f"❌ Error saving: {e}")
+        
+        st.divider()
+        
+        # Quick Actions
+        st.markdown("### ⚡ Quick Actions")
         if st.button("🔄 Refresh Now", use_container_width=True):
             dashboard_data.load_attack_history()
             dashboard_data.load_blocked_ips()
@@ -1206,31 +1787,168 @@ def main():
         show_attack_types = st.checkbox("🎯 Attack Types", value=True, key="show_attack_types")
         
         st.divider()
-        st.markdown("### ℹ️ System Info")
-        try:
-            config = load_config()
-            st.info(f"📄 Log: {config.get('general', {}).get('log_file', 'attack_detection.log')}")
-        except:
-            pass
+        st.markdown("### 📥 Extension Download")
+        st.markdown("**Download the extension for distribution**")
+        
+        # Check if extension package exists
+        extension_dir = project_root / "extension_build"
+        exe_path = None
+        
+        if extension_dir.exists():
+            # Look for .exe file (Windows)
+            exe_files = list(extension_dir.glob("*.exe"))
+            if exe_files:
+                exe_path = exe_files[0]
+            else:
+                # Look for other executable formats
+                for ext in ["*.app", "*.bin", "*.run"]:
+                    files = list(extension_dir.glob(ext))
+                    if files:
+                        exe_path = files[0]
+                        break
+        
+        if exe_path and exe_path.exists():
+            try:
+                with open(exe_path, "rb") as f:
+                    file_bytes = f.read()
+                
+                file_size_mb = exe_path.stat().st_size / (1024 * 1024)
+                st.download_button(
+                    label="⬇️ Download Extension",
+                    data=file_bytes,
+                    file_name=exe_path.name,
+                    mime="application/octet-stream",
+                    use_container_width=True,
+                    key="sidebar_download_extension"
+                )
+                st.caption(f"📦 {file_size_mb:.1f} MB")
+            except Exception as e:
+                st.error(f"Error: {e}")
+        else:
+            st.warning("⚠️ Extension not built yet")
+            st.caption("Run: `python build_extension.py`")
+            st.info("💡 **For Demo:** Show the public download page at `http://localhost:8502`")
+        
+        st.divider()
+        
+        # System Info - Collapsible
+        with st.expander("ℹ️ System Info", expanded=False):
+            try:
+                config = load_config()
+                
+                # System Resources
+                try:
+                    cpu_percent = psutil.cpu_percent(interval=0.1)
+                    memory = psutil.virtual_memory()
+                    disk = psutil.disk_usage('/' if os.name != 'nt' else 'C:\\')
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("CPU", f"{cpu_percent:.1f}%")
+                    with col2:
+                        st.metric("Memory", f"{memory.percent:.1f}%")
+                    with col3:
+                        st.metric("Disk", f"{disk.percent:.1f}%")
+                except Exception as e:
+                    st.warning(f"⚠️ Could not fetch system resources: {e}")
+                
+                st.divider()
+                
+                # Configuration Info
+                st.markdown("#### 📋 Configuration")
+                log_file = config.get('general', {}).get('log_file', 'attack_detection.log')
+                log_path = Path(log_file)
+                if log_path.exists():
+                    log_size = log_path.stat().st_size / 1024  # KB
+                    st.info(f"📄 **Log File:** `{log_file}` ({log_size:.1f} KB)")
+                else:
+                    st.warning(f"📄 **Log File:** `{log_file}` (not found)")
+                
+                # Network Interface
+                network_interface = config.get('network', {}).get('interface')
+                if network_interface:
+                    st.info(f"🌐 **Network Interface:** `{network_interface}`")
+                else:
+                    st.info("🌐 **Network Interface:** Auto-detect")
+                
+                # Detection Status
+                st.markdown("#### 🔍 Detection Status")
+                ddos_enabled = config.get('detection', {}).get('ddos', {}).get('enabled', True)
+                port_scan_enabled = config.get('detection', {}).get('port_scan', {}).get('enabled', True)
+                brute_force_enabled = config.get('detection', {}).get('brute_force', {}).get('enabled', True)
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    status = "✅" if ddos_enabled else "❌"
+                    st.caption(f"{status} DDoS Detection")
+                with col2:
+                    status = "✅" if port_scan_enabled else "❌"
+                    st.caption(f"{status} Port Scan")
+                with col3:
+                    status = "✅" if brute_force_enabled else "❌"
+                    st.caption(f"{status} Brute Force")
+                
+                # Alert Status
+                st.markdown("#### 🔔 Alert Status")
+                desktop_enabled = config.get('alerts', {}).get('desktop', {}).get('enabled', True)
+                discord_enabled = config.get('alerts', {}).get('discord', {}).get('enabled', False)
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    status = "✅ Enabled" if desktop_enabled else "❌ Disabled"
+                    st.caption(f"🖥️ Desktop: {status}")
+                with col2:
+                    status = "✅ Enabled" if discord_enabled else "❌ Disabled"
+                    st.caption(f"📱 Discord: {status}")
+                
+                # System Information
+                st.markdown("#### 💻 System Details")
+                try:
+                    system_info = {
+                        "OS": platform.system(),
+                        "OS Version": platform.version(),
+                        "Architecture": platform.machine(),
+                        "Processor": platform.processor()[:50] if platform.processor() else "Unknown",
+                        "Python": platform.python_version()
+                    }
+                    
+                    for key, value in system_info.items():
+                        st.caption(f"**{key}:** {value}")
+                except Exception as e:
+                    st.caption(f"⚠️ Could not fetch system details: {e}")
+                
+                st.caption("💡 **Note:** Some settings require restarting `main.py` to take effect")
+                
+            except Exception as e:
+                st.error(f"❌ Error loading system info: {e}")
     
-    # Load fresh data (always reload to get latest attacks)
-    dashboard_data.load_attack_history()
+    # Load data with smart refresh (only reload if cache expired or new attacks detected)
+    # Check if we need to refresh by comparing attack count
+    current_attack_count = len(dashboard_data.get_all_attacks())
+    needs_refresh = False
+    
+    # Force refresh if attack count changed (new attacks detected)
+    if current_attack_count != dashboard_data.last_attack_count:
+        needs_refresh = True
+        new_attacks = current_attack_count - dashboard_data.last_attack_count
+        if new_attacks > 0:
+            st.markdown(
+                f'<div class="notification-banner">🆕 <strong>{new_attacks} new attack(s) detected!</strong> Dashboard updated automatically.</div>',
+                unsafe_allow_html=True
+            )
+            dashboard_data.last_attack_count = current_attack_count
+            # Invalidate all caches when new attacks are detected
+            dashboard_data._cache["stats"]["data"] = None
+            dashboard_data._cache["traffic_data"]["data"] = None
+            dashboard_data._cache["pps_data"]["data"] = None
+            dashboard_data._cache["per_ip_traffic"]["data"] = None
+            dashboard_data._cache["protocol_breakdown"]["data"] = None
+            dashboard_data._cache["profiles"] = {}  # Clear profile cache
+    
+    # Load data (will use cache if valid, otherwise refresh)
+    dashboard_data.load_attack_history(force_refresh=needs_refresh)
     dashboard_data.load_blocked_ips()
     stats = dashboard_data.get_attack_stats()
-    
-    # Check for new attacks and auto-refresh if enabled
-    current_attack_count = len(dashboard_data.get_all_attacks())
-    if current_attack_count > dashboard_data.last_attack_count:
-        new_attacks = current_attack_count - dashboard_data.last_attack_count
-        st.markdown(
-            f'<div class="notification-banner">🆕 <strong>{new_attacks} new attack(s) detected!</strong> Dashboard updated automatically.</div>',
-            unsafe_allow_html=True
-        )
-        dashboard_data.last_attack_count = current_attack_count
-        # Auto-refresh if enabled to show new attacks immediately
-        if auto_refresh:
-            time.sleep(0.5)  # Small delay to ensure data is saved
-            st.rerun()
     
     # TAB 1: Main Dashboard
     with tab1:
@@ -1251,6 +1969,10 @@ def main():
     # TAB 5: Live Packet Visualization
     with tab5:
         render_live_packet_visualization()
+    
+    # TAB 6: Advanced Visualizations
+    with tab6:
+        render_advanced_visualizations(dashboard_data)
     
     # Auto-refresh - only refresh if enabled and not blocking page load
     if auto_refresh:
@@ -2509,11 +3231,459 @@ def render_live_packet_visualization():
     else:
         st.info("No packets captured yet. Start capture to see live packet stream.")
     
-    # Auto-refresh when capture is running
+    # Auto-refresh when capture is running (optimized: only refresh if data changed)
     if auto_refresh_viz and visualizer.running:
-        import time
-        time.sleep(2)  # Wait 2 seconds
-        st.rerun()  # Refresh the page to show new packets
+        # Check if there's new data before refreshing
+        current_packet_count = visualizer.total_packets
+        if "last_viz_packet_count" not in st.session_state:
+            st.session_state.last_viz_packet_count = current_packet_count
+        
+        # Only refresh if new packets were captured
+        if current_packet_count > st.session_state.last_viz_packet_count:
+            st.session_state.last_viz_packet_count = current_packet_count
+            import time
+            time.sleep(2)  # Wait 2 seconds
+            st.rerun()  # Refresh the page to show new packets
+
+
+def render_advanced_visualizations(dashboard_data):
+    """Render advanced visualizations: geographic map, network topology, and attack flow diagrams."""
+    st.markdown("## 🌍 Advanced Visualizations")
+    st.caption("Interactive geographic attack map, network topology, and real-time attack flow diagrams")
+    
+    all_attacks = dashboard_data.get_all_attacks()
+    
+    if not all_attacks:
+        st.info("No attacks detected yet. Visualizations will appear once attacks are detected.")
+        return
+    
+    # Sub-tabs for different visualizations
+    viz_tab1, viz_tab2, viz_tab3 = st.tabs([
+        "🗺️ Geographic Attack Map",
+        "🕸️ Network Topology",
+        "📊 Attack Flow Diagrams"
+    ])
+    
+    with viz_tab1:
+        render_geographic_map(all_attacks)
+    
+    with viz_tab2:
+        render_network_topology(all_attacks)
+    
+    with viz_tab3:
+        render_attack_flow_diagrams(all_attacks)
+
+
+def render_geographic_map(all_attacks):
+    """Render geographic attack map using Plotly scattergeo."""
+    st.markdown("### 🗺️ Geographic Attack Map")
+    st.caption("Visualize attack sources by location using Shodan geolocation data")
+    
+    # Extract geographic data from attacks
+    geo_data = []
+    for attack in all_attacks:
+        shodan_data = attack.get("shodan_data", {})
+        if shodan_data:
+            ip_info = shodan_data.get("ip_info", {})
+            location = ip_info.get("location", {}) if ip_info else {}
+            
+            lat = location.get("latitude")
+            lon = location.get("longitude")
+            country = location.get("country", "Unknown")
+            city = location.get("city", "Unknown")
+            
+            if lat and lon:
+                severity = attack.get("severity", "MEDIUM")
+                attack_type = attack.get("attack_type", "Unknown")
+                src_ip = attack.get("src_ip", "Unknown")
+                packet_count = attack.get("packet_count", 0) or attack.get("details", {}).get("packet_count", 0) or 0
+                
+                geo_data.append({
+                    "lat": lat,
+                    "lon": lon,
+                    "country": country,
+                    "city": city,
+                    "ip": src_ip,
+                    "attack_type": attack_type,
+                    "severity": severity,
+                    "packet_count": packet_count,
+                    "timestamp": attack.get("timestamp")
+                })
+    
+    if not geo_data:
+        st.warning("⚠️ No geographic data available. Shodan location information is required for this visualization.")
+        st.info("💡 **Tip:** Ensure Shodan API is configured in `config.json` to get location data for attacker IPs.")
+        return
+    
+    # Create DataFrame
+    df_geo = pd.DataFrame(geo_data)
+    
+    # Aggregate by location (group attacks from same location)
+    location_stats = df_geo.groupby(["lat", "lon", "country", "city"]).agg({
+        "ip": "nunique",
+        "attack_type": lambda x: ", ".join(x.unique()[:3]),
+        "severity": lambda x: x.value_counts().index[0] if len(x) > 0 else "MEDIUM",
+        "packet_count": "sum"
+    }).reset_index()
+    location_stats.columns = ["lat", "lon", "country", "city", "unique_ips", "attack_types", "severity", "total_packets"]
+    
+    # Color mapping for severity
+    severity_colors = {
+        "CRITICAL": "#e74c3c",
+        "HIGH": "#e67e22",
+        "MEDIUM": "#888888",
+        "LOW": "#B0B0B0"
+    }
+    
+    # Create scattergeo map
+    fig_map = go.Figure()
+    
+    # Add traces for each severity level
+    for severity in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
+        df_sev = location_stats[location_stats["severity"] == severity]
+        if len(df_sev) > 0:
+            fig_map.add_trace(go.Scattergeo(
+                lat=df_sev["lat"],
+                lon=df_sev["lon"],
+                mode='markers',
+                name=severity,
+                marker=dict(
+                    size=df_sev["total_packets"] / df_sev["total_packets"].max() * 30 + 10,
+                    color=severity_colors.get(severity, "#888888"),
+                    line=dict(width=1, color='#E0E0E0'),
+                    opacity=0.8
+                ),
+                text=[
+                    f"<b>{row['city']}, {row['country']}</b><br>"
+                    f"IPs: {row['unique_ips']}<br>"
+                    f"Attacks: {row['attack_types']}<br>"
+                    f"Packets: {row['total_packets']:,}<br>"
+                    f"Severity: {row['severity']}"
+                    for _, row in df_sev.iterrows()
+                ],
+                hovertemplate='%{text}<extra></extra>'
+            ))
+    
+    fig_map.update_layout(
+        title="",
+        geo=dict(
+            projection_type="natural earth",
+            showland=True,
+            landcolor='rgba(68, 68, 68, 0.3)',
+            showocean=True,
+            oceancolor='rgba(18, 18, 18, 0.5)',
+            showlakes=True,
+            lakecolor='rgba(18, 18, 18, 0.3)',
+            showcountries=True,
+            countrycolor='#444444',
+            bgcolor='rgba(18, 18, 18, 0.9)'
+        ),
+        height=600,
+        plot_bgcolor='rgba(18, 18, 18, 0.9)',
+        paper_bgcolor='rgba(18, 18, 18, 0.9)',
+        font=dict(color='#E0E0E0', size=12),
+        legend=dict(bgcolor='rgba(26, 26, 26, 0.9)', bordercolor='#444444')
+    )
+    
+    st.plotly_chart(fig_map, use_container_width=True)
+    
+    # Statistics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Countries", df_geo["country"].nunique())
+    with col2:
+        st.metric("Cities", df_geo["city"].nunique())
+    with col3:
+        st.metric("Unique IPs", df_geo["ip"].nunique())
+    with col4:
+        st.metric("Total Attacks", len(geo_data))
+    
+    # Top countries table
+    st.markdown("#### 📊 Top Countries by Attack Count")
+    country_stats = df_geo.groupby("country").agg({
+        "ip": "nunique",
+        "packet_count": "sum"
+    }).reset_index()
+    country_stats.columns = ["Country", "Unique IPs", "Total Packets"]
+    country_stats = country_stats.sort_values("Total Packets", ascending=False)
+    st.dataframe(country_stats.head(20), use_container_width=True, hide_index=True)
+
+
+def render_network_topology(all_attacks):
+    """Render network topology visualization showing IP connections."""
+    st.markdown("### 🕸️ Network Topology Visualization")
+    st.caption("Interactive network graph showing connections between attacker IPs and your network")
+    
+    # Build connection graph
+    connections = {}
+    ip_nodes = set()
+    
+    for attack in all_attacks:
+        src_ip = attack.get("src_ip")
+        if not src_ip or src_ip == "Unknown":
+            continue
+        
+        ip_nodes.add(src_ip)
+        
+        # Get destination IP if available (from attack details)
+        details = attack.get("details", {})
+        dst_ip = details.get("dst_ip") or "Your Network"
+        ip_nodes.add(dst_ip)
+        
+        # Create connection key
+        conn_key = (src_ip, dst_ip)
+        if conn_key not in connections:
+            connections[conn_key] = {
+                "count": 0,
+                "packets": 0,
+                "attack_types": set(),
+                "severity": []
+            }
+        
+        connections[conn_key]["count"] += 1
+        connections[conn_key]["packets"] += attack.get("packet_count", 0) or details.get("packet_count", 0) or 0
+        connections[conn_key]["attack_types"].add(attack.get("attack_type", "Unknown"))
+        connections[conn_key]["severity"].append(attack.get("severity", "MEDIUM"))
+    
+    if not connections:
+        st.info("No network connections data available yet.")
+        return
+    
+    # Prepare data for Sankey diagram
+    source_nodes = []
+    target_nodes = []
+    values = []
+    labels = []
+    colors = []
+    
+    # Create node mapping
+    node_map = {}
+    node_idx = 0
+    
+    # Add "Your Network" as central node
+    node_map["Your Network"] = node_idx
+    labels.append("Your Network")
+    colors.append("#27ae60")  # Green for your network
+    node_idx += 1
+    
+    # Add attacker IPs
+    for ip in sorted(ip_nodes):
+        if ip != "Your Network":
+            node_map[ip] = node_idx
+            labels.append(ip)
+            # Color by most severe attack from this IP
+            max_severity = "MEDIUM"
+            for conn_key, conn_data in connections.items():
+                if conn_key[0] == ip:
+                    if conn_data["severity"]:
+                        severity_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+                        max_sev = min(conn_data["severity"], key=lambda s: severity_order.get(s, 4))
+                        if severity_order.get(max_sev, 4) < severity_order.get(max_severity, 4):
+                            max_severity = max_sev
+            
+            severity_colors = {
+                "CRITICAL": "#e74c3c",
+                "HIGH": "#e67e22",
+                "MEDIUM": "#888888",
+                "LOW": "#B0B0B0"
+            }
+            colors.append(severity_colors.get(max_severity, "#888888"))
+            node_idx += 1
+    
+    # Build connections
+    for (src, dst), conn_data in connections.items():
+        if src in node_map and dst in node_map:
+            source_nodes.append(node_map[src])
+            target_nodes.append(node_map[dst])
+            values.append(conn_data["packets"] or conn_data["count"] * 100)
+    
+    # Create Sankey diagram
+    fig_sankey = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color="#444444", width=1),
+            label=labels,
+            color=colors
+        ),
+        link=dict(
+            source=source_nodes,
+            target=target_nodes,
+            value=values,
+            color='rgba(136, 136, 136, 0.4)'
+        )
+    )])
+    
+    fig_sankey.update_layout(
+        title="",
+        height=600,
+        plot_bgcolor='rgba(18, 18, 18, 0.9)',
+        paper_bgcolor='rgba(18, 18, 18, 0.9)',
+        font=dict(color='#E0E0E0', size=12)
+    )
+    
+    st.plotly_chart(fig_sankey, use_container_width=True)
+    
+    # Connection statistics table
+    st.markdown("#### 📋 Connection Statistics")
+    conn_data_list = []
+    for (src, dst), conn_data in sorted(connections.items(), key=lambda x: x[1]["packets"], reverse=True)[:20]:
+        conn_data_list.append({
+            "Source IP": src,
+            "Destination": dst,
+            "Attacks": conn_data["count"],
+            "Total Packets": f"{conn_data['packets']:,}",
+            "Attack Types": ", ".join(list(conn_data["attack_types"])[:3]),
+            "Max Severity": max(conn_data["severity"], key=lambda s: {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(s, 4)) if conn_data["severity"] else "MEDIUM"
+        })
+    
+    if conn_data_list:
+        df_conn = pd.DataFrame(conn_data_list)
+        st.dataframe(df_conn, use_container_width=True, hide_index=True)
+
+
+def render_attack_flow_diagrams(all_attacks):
+    """Render real-time attack flow diagrams showing attack progression."""
+    st.markdown("### 📊 Real-Time Attack Flow Diagrams")
+    st.caption("Visualize attack progression and patterns over time")
+    
+    # Time range selector
+    col1, col2 = st.columns(2)
+    with col1:
+        time_range = st.selectbox(
+            "Time Range",
+            ["Last Hour", "Last 6 Hours", "Last 24 Hours", "Last 7 Days", "All"],
+            key="flow_time_range"
+        )
+    with col2:
+        group_by = st.selectbox(
+            "Group By",
+            ["Attack Type", "Severity", "IP", "Protocol"],
+            key="flow_group_by"
+        )
+    
+    # Filter by time range
+    now = datetime.now()
+    if time_range == "Last Hour":
+        cutoff = now - timedelta(hours=1)
+    elif time_range == "Last 6 Hours":
+        cutoff = now - timedelta(hours=6)
+    elif time_range == "Last 24 Hours":
+        cutoff = now - timedelta(hours=24)
+    elif time_range == "Last 7 Days":
+        cutoff = now - timedelta(days=7)
+    else:
+        cutoff = None
+    
+    filtered_attacks = all_attacks
+    if cutoff:
+        filtered_attacks = [
+            a for a in all_attacks
+            if (a["timestamp"] if isinstance(a["timestamp"], datetime) else datetime.fromisoformat(str(a["timestamp"]))) >= cutoff
+        ]
+    
+    if not filtered_attacks:
+        st.info("No attacks in selected time range.")
+        return
+    
+    # Prepare flow data
+    flow_data = []
+    for attack in filtered_attacks:
+        timestamp = attack["timestamp"] if isinstance(attack["timestamp"], datetime) else datetime.fromisoformat(str(attack["timestamp"]))
+        
+        if group_by == "Attack Type":
+            group = attack.get("attack_type", "Unknown")
+        elif group_by == "Severity":
+            group = attack.get("severity", "MEDIUM")
+        elif group_by == "IP":
+            group = attack.get("src_ip", "Unknown")
+        else:
+            group = attack.get("protocol", "Unknown")
+        
+        flow_data.append({
+            "timestamp": timestamp,
+            "group": group,
+            "packet_count": attack.get("packet_count", 0) or attack.get("details", {}).get("packet_count", 0) or 0,
+            "packet_rate": attack.get("packet_rate", 0) or attack.get("packet_rate_pps", 0) or 0,
+            "severity": attack.get("severity", "MEDIUM")
+        })
+    
+    df_flow = pd.DataFrame(flow_data)
+    
+    # Create time series flow diagram
+    fig_flow = go.Figure()
+    
+    # Group by selected category
+    for group in df_flow["group"].unique():
+        df_group = df_flow[df_flow["group"] == group]
+        df_group = df_group.sort_values("timestamp")
+        
+        # Aggregate by time window (5-minute intervals)
+        df_group["time_window"] = df_group["timestamp"].dt.floor("5T")
+        df_agg = df_group.groupby("time_window").agg({
+            "packet_count": "sum",
+            "packet_rate": "mean"
+        }).reset_index()
+        
+        fig_flow.add_trace(go.Scatter(
+            x=df_agg["time_window"],
+            y=df_agg["packet_count"],
+            mode='lines+markers',
+            name=group,
+            line=dict(width=2),
+            marker=dict(size=8),
+            hovertemplate=f'<b>{group}</b><br>Time: %{{x}}<br>Packets: %{{y:,}}<extra></extra>'
+        ))
+    
+    fig_flow.update_layout(
+        title="",
+        height=500,
+        xaxis_title="Time",
+        yaxis_title="Packet Count",
+        plot_bgcolor='rgba(26, 26, 26, 0.9)',
+        paper_bgcolor='rgba(18, 18, 18, 0.9)',
+        font=dict(color='#E0E0E0', size=12),
+        legend=dict(bgcolor='rgba(26, 26, 26, 0.9)', bordercolor='#444444'),
+        hovermode='x unified'
+    )
+    
+    st.plotly_chart(fig_flow, use_container_width=True)
+    
+    # Attack intensity heatmap
+    st.markdown("#### 🔥 Attack Intensity Heatmap")
+    
+    # Create time vs group heatmap
+    df_flow["hour"] = df_flow["timestamp"].dt.hour
+    df_flow["day"] = df_flow["timestamp"].dt.date
+    
+    heatmap_data = df_flow.groupby([group_by.lower().replace(" ", "_"), "hour"]).agg({
+        "packet_count": "sum"
+    }).reset_index()
+    heatmap_data.columns = ["group", "hour", "packet_count"]
+    
+    # Pivot for heatmap
+    heatmap_pivot = heatmap_data.pivot(index="group", columns="hour", values="packet_count").fillna(0)
+    
+    fig_heatmap = go.Figure(data=go.Heatmap(
+        z=heatmap_pivot.values,
+        x=heatmap_pivot.columns,
+        y=heatmap_pivot.index,
+        colorscale='YlOrRd',
+        colorbar=dict(title="Packets"),
+        hovertemplate='<b>%{y}</b><br>Hour: %{x}<br>Packets: %{z:,}<extra></extra>'
+    ))
+    
+    fig_heatmap.update_layout(
+        title="",
+        height=400,
+        xaxis_title="Hour of Day",
+        yaxis_title=group_by,
+        plot_bgcolor='rgba(26, 26, 26, 0.9)',
+        paper_bgcolor='rgba(18, 18, 18, 0.9)',
+        font=dict(color='#E0E0E0', size=12)
+    )
+    
+    st.plotly_chart(fig_heatmap, use_container_width=True)
 
 
 if __name__ == "__main__":

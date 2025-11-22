@@ -8,7 +8,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 
 def load_config(config_path: str = "config.json") -> Dict[str, Any]:
@@ -176,3 +176,183 @@ def format_bytes(bytes_value: int) -> str:
         bytes_value /= 1024.0
     return f"{bytes_value:.2f} PB"
 
+
+def save_config(config: Dict[str, Any], config_path: str = "config.json") -> None:
+    """
+    Save configuration to JSON file.
+    
+    Args:
+        config: Dictionary containing configuration settings
+        config_path: Path to the configuration file
+        
+    Raises:
+        IOError: If config file cannot be written
+    """
+    config_file = Path(config_path)
+    
+    # Try to find config in parent directory if not found
+    if not config_file.exists():
+        parent_config = Path(__file__).parent.parent / config_path
+        if parent_config.exists():
+            config_file = parent_config
+        else:
+            # Create in current directory
+            config_file = Path(config_path)
+    
+    # Create backup before saving
+    if config_file.exists():
+        backup_path = config_file.with_suffix('.json.bak')
+        try:
+            import shutil
+            shutil.copy2(config_file, backup_path)
+        except:
+            pass  # If backup fails, continue anyway
+    
+    # Write config with proper formatting
+    with open(config_file, 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+
+
+def validate_attack_entry(attack: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    """
+    Validate an attack entry dictionary.
+    
+    Args:
+        attack: Attack entry dictionary to validate
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not isinstance(attack, dict):
+        return False, "Attack entry must be a dictionary"
+    
+    # Check required fields
+    required_fields = ["attack_type", "src_ip", "timestamp"]
+    for field in required_fields:
+        if field not in attack:
+            return False, f"Missing required field: {field}"
+    
+    # Validate timestamp
+    timestamp = attack.get("timestamp")
+    if timestamp is None:
+        return False, "Timestamp cannot be None"
+    
+    # Validate IP address
+    src_ip = attack.get("src_ip")
+    if src_ip and src_ip != "Unknown":
+        if not is_valid_ip(str(src_ip)):
+            return False, f"Invalid IP address: {src_ip}"
+    
+    # Validate severity
+    severity = attack.get("severity", "MEDIUM")
+    valid_severities = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+    if severity not in valid_severities:
+        return False, f"Invalid severity: {severity}. Must be one of {valid_severities}"
+    
+    # Validate numeric fields
+    numeric_fields = ["packet_count", "packet_rate", "packet_rate_pps"]
+    for field in numeric_fields:
+        value = attack.get(field)
+        if value is not None and not isinstance(value, (int, float)):
+            try:
+                float(value)  # Try to convert
+            except (ValueError, TypeError):
+                return False, f"Invalid {field}: must be numeric"
+    
+    return True, None
+
+
+def validate_timestamp(timestamp: Any) -> bool:
+    """
+    Validate timestamp value.
+    
+    Args:
+        timestamp: Timestamp to validate (datetime, string, or None)
+        
+    Returns:
+        True if valid, False otherwise
+    """
+    if timestamp is None:
+        return False
+    
+    from datetime import datetime
+    
+    if isinstance(timestamp, datetime):
+        return True
+    
+    if isinstance(timestamp, str):
+        try:
+            datetime.fromisoformat(timestamp)
+            return True
+        except (ValueError, AttributeError):
+            return False
+    
+    return False
+
+
+def safe_get(dictionary: Dict, *keys, default=None):
+    """
+    Safely get nested dictionary values.
+    
+    Args:
+        dictionary: Dictionary to search
+        *keys: Keys to traverse (e.g., safe_get(d, 'a', 'b', 'c'))
+        default: Default value if key not found
+        
+    Returns:
+        Value at nested key or default
+    """
+    try:
+        result = dictionary
+        for key in keys:
+            if not isinstance(result, dict):
+                return default
+            result = result.get(key)
+            if result is None:
+                return default
+        return result
+    except (KeyError, TypeError, AttributeError):
+        return default
+
+
+def validate_config(config: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    """
+    Validate configuration dictionary.
+    
+    Args:
+        config: Configuration dictionary to validate
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not isinstance(config, dict):
+        return False, "Configuration must be a dictionary"
+    
+    # Check for required top-level sections
+    required_sections = ["detection", "alerts", "dashboard"]
+    for section in required_sections:
+        if section not in config:
+            return False, f"Missing required configuration section: {section}"
+    
+    # Validate detection thresholds
+    detection = config.get("detection", {})
+    ddos_config = detection.get("ddos", {})
+    
+    if "packet_threshold" in ddos_config:
+        threshold = ddos_config["packet_threshold"]
+        if not isinstance(threshold, (int, float)) or threshold < 0:
+            return False, "DDoS packet_threshold must be a non-negative number"
+    
+    if "time_window_seconds" in ddos_config:
+        window = ddos_config["time_window_seconds"]
+        if not isinstance(window, (int, float)) or window <= 0:
+            return False, "DDoS time_window_seconds must be a positive number"
+    
+    # Validate dashboard port
+    dashboard = config.get("dashboard", {})
+    if "port" in dashboard:
+        port = dashboard["port"]
+        if not isinstance(port, int) or port < 1 or port > 65535:
+            return False, "Dashboard port must be between 1 and 65535"
+    
+    return True, None

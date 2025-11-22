@@ -1,1176 +1,7 @@
 {
-  "last_updated": "2025-11-22T08:19:58.405160",
+  "last_updated": "2025-11-22T13:36:52.111595",
   "total_attacks": 1000,
   "attacks": [
-    {
-      "id": 221,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "135.234.160.244",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:34.072580",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 885.8086589229144,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "135.234.160.244",
-            "open_ports": [
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Microsoft Corporation",
-            "org": "Microsoft Limited",
-            "os": null,
-            "hostnames": [
-              "watson.telemetry.microsoft.com",
-              "watson.microsoft.com",
-              "eu-watsonc.events.data.microsoft.com",
-              "nw-kmwatson.events.data.microsoft.com",
-              "oca.telemetry.microsoft.com",
-              "watson.events.data.microsoft.com",
-              "umwatsonc.events.data.microsoft.com",
-              "kmwatsonc.events.data.microsoft.com",
-              "oca.microsoft.com",
-              "umwatson.events.data.microsoft.com",
-              "nw-umwatson.events.data.microsoft.com",
-              "kmwatson.events.data.microsoft.com",
-              "watsonc.events.data.microsoft.com",
-              "us-kmwatsonc.events.data.microsoft.com",
-              "us-umwatsonc.events.data.microsoft.com"
-            ],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "Ashburn",
-              "latitude": 39.04372,
-              "longitude": -77.48749
-            },
-            "tags": [
-              "cloud"
-            ],
-            "services": [
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nServer: Microsoft-HTTPAPI/2.0\r\nStrict-Transport-Security: max-age=31536000\r\nDate: Wed, 12 Nov 2025 09:28:01 GMT\r\n\r\n"
-              }
-            ],
-            "last_update": "2025-11-12T09:28:02.539494"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:24:34"
-    },
-    {
-      "id": 222,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:35.587803",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 277.96176148977764,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:24:35"
-    },
-    {
-      "id": 223,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:37.214315",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 1705.0016260162602,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:24:37"
-    },
-    {
-      "id": 224,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:38.709266",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 1942.2570039360962,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:24:38"
-    },
-    {
-      "id": 225,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:40.256309",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 2811.195710455764,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:24:40"
-    },
-    {
-      "id": 226,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "104.18.19.125",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:43.098796",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 3003.4400286430364,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "104.18.19.125",
-            "open_ports": [
-              2096,
-              2082,
-              2083,
-              2053,
-              2086,
-              2087,
-              2095,
-              80,
-              8880,
-              8080,
-              8443,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Cloudflare, Inc.",
-            "org": "Cloudflare, Inc.",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "San Francisco",
-              "latitude": 37.7621,
-              "longitude": -122.3971
-            },
-            "tags": [
-              "cdn"
-            ],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 06:52:33 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:48:58 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2053,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 08 Nov 2025 18:37:35 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2082,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 08:57:26 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2083,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:45:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2086,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 09:50:07 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6237\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2087,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 06:17:16 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2095,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Sat, 08 Nov 2025 10:21:49 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2096,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 15 Nov 2025 23:42:31 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8080,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 03:59:20 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6236\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 8443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 10:23:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8880,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 07:24:35 GMT\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Length: 16\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T11:48:58.095498"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:24:43"
-    },
-    {
-      "id": 227,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "104.18.19.125",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:46.048854",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 353.3086804531862,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "104.18.19.125",
-            "open_ports": [
-              2096,
-              2082,
-              2083,
-              2053,
-              2086,
-              2087,
-              2095,
-              80,
-              8880,
-              8080,
-              8443,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Cloudflare, Inc.",
-            "org": "Cloudflare, Inc.",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "San Francisco",
-              "latitude": 37.7621,
-              "longitude": -122.3971
-            },
-            "tags": [
-              "cdn"
-            ],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 06:52:33 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:48:58 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2053,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 08 Nov 2025 18:37:35 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2082,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 08:57:26 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2083,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:45:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2086,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 09:50:07 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6237\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2087,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 06:17:16 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2095,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Sat, 08 Nov 2025 10:21:49 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2096,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 15 Nov 2025 23:42:31 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8080,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 03:59:20 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6236\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 8443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 10:23:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8880,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 07:24:35 GMT\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Length: 16\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T11:48:58.095498"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:24:46"
-    },
-    {
-      "id": 228,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:47.639670",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 1067.7963340122199,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:24:47"
-    },
-    {
-      "id": 229,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:49.272298",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 1577.1024628689604,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:24:49"
-    },
-    {
-      "id": 230,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:50.855997",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 2074.8473905515707,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:24:50"
-    },
-    {
-      "id": 231,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "104.18.19.125",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:53.736835",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 2989.5253029223095,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "104.18.19.125",
-            "open_ports": [
-              2096,
-              2082,
-              2083,
-              2053,
-              2086,
-              2087,
-              2095,
-              80,
-              8880,
-              8080,
-              8443,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Cloudflare, Inc.",
-            "org": "Cloudflare, Inc.",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "San Francisco",
-              "latitude": 37.7621,
-              "longitude": -122.3971
-            },
-            "tags": [
-              "cdn"
-            ],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 06:52:33 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:48:58 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2053,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 08 Nov 2025 18:37:35 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2082,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 08:57:26 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2083,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:45:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2086,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 09:50:07 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6237\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2087,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 06:17:16 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2095,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Sat, 08 Nov 2025 10:21:49 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2096,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 15 Nov 2025 23:42:31 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8080,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 03:59:20 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6236\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 8443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 10:23:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8880,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 07:24:35 GMT\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Length: 16\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T11:48:58.095498"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:24:53"
-    },
-    {
-      "id": 232,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "104.18.19.125",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:56.647185",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 303.0019143940762,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "104.18.19.125",
-            "open_ports": [
-              2096,
-              2082,
-              2083,
-              2053,
-              2086,
-              2087,
-              2095,
-              80,
-              8880,
-              8080,
-              8443,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Cloudflare, Inc.",
-            "org": "Cloudflare, Inc.",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "San Francisco",
-              "latitude": 37.7621,
-              "longitude": -122.3971
-            },
-            "tags": [
-              "cdn"
-            ],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 06:52:33 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:48:58 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2053,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 08 Nov 2025 18:37:35 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2082,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 08:57:26 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2083,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:45:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2086,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 09:50:07 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6237\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2087,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 06:17:16 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2095,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Sat, 08 Nov 2025 10:21:49 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2096,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 15 Nov 2025 23:42:31 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8080,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 03:59:20 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6236\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 8443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 10:23:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8880,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 07:24:35 GMT\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Length: 16\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T11:48:58.095498"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:24:56"
-    },
-    {
-      "id": 233,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "104.18.19.125",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:24:59.509655",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 1725.695947335939,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "104.18.19.125",
-            "open_ports": [
-              2096,
-              2082,
-              2083,
-              2053,
-              2086,
-              2087,
-              2095,
-              80,
-              8880,
-              8080,
-              8443,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Cloudflare, Inc.",
-            "org": "Cloudflare, Inc.",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "San Francisco",
-              "latitude": 37.7621,
-              "longitude": -122.3971
-            },
-            "tags": [
-              "cdn"
-            ],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 06:52:33 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:48:58 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2053,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 08 Nov 2025 18:37:35 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2082,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 08:57:26 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2083,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:45:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2086,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 09:50:07 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6237\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2087,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 06:17:16 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2095,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Sat, 08 Nov 2025 10:21:49 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2096,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 15 Nov 2025 23:42:31 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8080,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 03:59:20 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6236\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 8443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 10:23:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8880,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 07:24:35 GMT\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Length: 16\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T11:48:58.095498"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:24:59"
-    },
-    {
-      "id": 234,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "104.18.19.125",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:25:02.889021",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 991.4440373478312,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "104.18.19.125",
-            "open_ports": [
-              2096,
-              2082,
-              2083,
-              2053,
-              2086,
-              2087,
-              2095,
-              80,
-              8880,
-              8080,
-              8443,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Cloudflare, Inc.",
-            "org": "Cloudflare, Inc.",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "San Francisco",
-              "latitude": 37.7621,
-              "longitude": -122.3971
-            },
-            "tags": [
-              "cdn"
-            ],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 06:52:33 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:48:58 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2053,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 08 Nov 2025 18:37:35 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2082,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 08:57:26 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2083,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 11:45:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2086,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 09:50:07 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6237\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2087,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 06:17:16 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 2095,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Sat, 08 Nov 2025 10:21:49 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6235\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 2096,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 15 Nov 2025 23:42:31 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8080,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 03:59:20 GMT\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: 6236\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r"
-              },
-              {
-                "port": 8443,
-                "protocol": "tcp",
-                "product": "CloudFlare",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Wed, 19 Nov 2025 10:23:43 GMT\r\nContent-Type: text/html\r\nContent-Length: 655\r\nConnection: close\r\nCF-RAY: -\r\n\r\n"
-              },
-              {
-                "port": 8880,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 403 Forbidden\r\nDate: Wed, 19 Nov 2025 07:24:35 GMT\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Length: 16\r\nConnection: close\r\nX-Frame-Options: SAMEORIGIN\r\nReferrer-Policy: same-origin\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T11:48:58.095498"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:25:02"
-    },
-    {
-      "id": 235,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:25:04.430483",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 121.26646910010842,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:25:04"
-    },
-    {
-      "id": 236,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:25:06.051653",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 1148.0235390721227,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:25:06"
-    },
-    {
-      "id": 237,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:25:07.589441",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 2927.960907504363,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:25:07"
-    },
-    {
-      "id": 238,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "34.139.124.58",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:25:09.165884",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 367.19667323265486,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood"
-      },
-      "timestamp_display": "2025-11-19 10:25:09"
-    },
-    {
-      "id": 239,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "52.123.128.14",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:25:13.453023",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 523.9932537947404,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "52.123.128.14",
-            "open_ports": [
-              80,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Microsoft Corporation",
-            "org": "Microsoft Corporation",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "Redmond",
-              "latitude": 47.67399,
-              "longitude": -122.12151
-            },
-            "tags": [],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nTransfer-Encoding: chunked\r\nX-MSEdge-Ref: 0NnodaQAAAAClOoqcnqrvT5rKMVJ+SjI4REZXMzExMDAwMTA0MDM5AEVkZ2U=\r\nDate: Wed, 19 Nov 2025 08:05:09 GMT\r\n\r\n"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nTransfer-Encoding: chunked\r\nX-MSEdge-Ref: 0P48daQAAAADqCNU1b08WQ5rac46XcpU3REZXMzExMDAwMTA0MDM1AEVkZ2U=\r\nDate: Wed, 19 Nov 2025 09:34:54 GMT\r\n\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T09:32:41.254843"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:25:13"
-    },
-    {
-      "id": 240,
-      "attack_type": "DDoS/Flooding",
-      "src_ip": "52.123.128.14",
-      "severity": "HIGH",
-      "timestamp": "2025-11-19T10:25:17.594823",
-      "details": {
-        "packet_count": 2,
-        "packet_rate": 2714.759870550162,
-        "protocol": "Mixed",
-        "attack_subtype": "General Packet Flood",
-        "shodan_data": {
-          "shodan_enriched": true,
-          "ip_info": {
-            "ip": "52.123.128.14",
-            "open_ports": [
-              80,
-              443
-            ],
-            "vulnerabilities": [],
-            "isp": "Microsoft Corporation",
-            "org": "Microsoft Corporation",
-            "os": null,
-            "hostnames": [],
-            "device_type": "Unknown",
-            "location": {
-              "country": "United States",
-              "city": "Redmond",
-              "latitude": 47.67399,
-              "longitude": -122.12151
-            },
-            "tags": [],
-            "services": [
-              {
-                "port": 80,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nTransfer-Encoding: chunked\r\nX-MSEdge-Ref: 0NnodaQAAAAClOoqcnqrvT5rKMVJ+SjI4REZXMzExMDAwMTA0MDM5AEVkZ2U=\r\nDate: Wed, 19 Nov 2025 08:05:09 GMT\r\n\r\n"
-              },
-              {
-                "port": 443,
-                "protocol": "tcp",
-                "product": "Unknown",
-                "version": "",
-                "banner": "HTTP/1.1 400 Bad Request\r\nTransfer-Encoding: chunked\r\nX-MSEdge-Ref: 0P48daQAAAADqCNU1b08WQ5rac46XcpU3REZXMzExMDAwMTA0MDM1AEVkZ2U=\r\nDate: Wed, 19 Nov 2025 09:34:54 GMT\r\n\r\n"
-              }
-            ],
-            "last_update": "2025-11-19T09:32:41.254843"
-          },
-          "exploits": [],
-          "honeypot": null,
-          "threat_level": "LOW"
-        }
-      },
-      "timestamp_display": "2025-11-19 10:25:17"
-    },
     {
       "id": 241,
       "attack_type": "DDoS/Flooding",
@@ -32074,6 +30905,287 @@
         "attack_subtype": ""
       },
       "timestamp_display": "2025-11-22 08:19:58"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "44.197.233.174",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:25:49.046358",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:25:49"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:26:19.323260",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:26:19"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:27:42.602746",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:27:42"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:28:35.044857",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:28:35"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:29:34.622941",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:29:34"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "52.86.225.235",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:29:38.423973",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:29:38"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "3.221.136.206",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:29:42.180172",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:29:42"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "34.227.250.170",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:29:46.808837",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": "",
+        "shodan_data": {
+          "shodan_enriched": true,
+          "ip_info": {
+            "ip": "34.227.250.170",
+            "open_ports": [
+              443
+            ],
+            "vulnerabilities": [],
+            "isp": "Amazon.com, Inc.",
+            "org": "Amazon Technologies Inc.",
+            "os": null,
+            "hostnames": [
+              "prod.authentication.cursor.sh",
+              "ec2-34-227-250-170.compute-1.amazonaws.com",
+              "api2.cursor.sh"
+            ],
+            "device_type": "Unknown",
+            "location": {
+              "country": "United States",
+              "city": "Ashburn",
+              "latitude": 39.04372,
+              "longitude": -77.48749
+            },
+            "tags": [
+              "cloud"
+            ],
+            "services": [
+              {
+                "port": 443,
+                "protocol": "tcp",
+                "product": "AWS ELB",
+                "version": "2.0",
+                "banner": "HTTP/1.1 404 Not Found\r\nServer: awselb/2.0\r\nDate: Tue, 18 Nov 2025 20:36:32 GMT\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 31\r\nConnection: keep-alive\r\n\r\n"
+              }
+            ],
+            "last_update": "2025-11-18T20:36:32.844062"
+          },
+          "exploits": [],
+          "honeypot": null,
+          "threat_level": "LOW"
+        }
+      },
+      "timestamp_display": "2025-11-22 13:29:46"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "3.212.225.130",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:29:49.729914",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:29:49"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "3.220.36.67",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:30:03.721084",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:30:03"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "54.208.57.201",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:30:07.183173",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:30:07"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "98.95.90.97",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:30:09.058433",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:30:09"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:30:11.837385",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:30:11"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "52.86.225.235",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:30:13.233908",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:30:13"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "3.221.136.206",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:30:14.836818",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:30:14"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:31:19.086774",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:31:19"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:31:33.842160",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:31:33"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:32:42.596173",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:32:42"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "3.229.241.119",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:35:32.996185",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:35:32"
+    },
+    {
+      "id": 1001,
+      "attack_type": "Port Scanning",
+      "src_ip": "192.168.18.1",
+      "severity": "MEDIUM",
+      "timestamp": "2025-11-22T13:36:52.111410",
+      "details": {
+        "protocol": "Unknown",
+        "attack_subtype": ""
+      },
+      "timestamp_display": "2025-11-22 13:36:52"
     }
   ]
 }

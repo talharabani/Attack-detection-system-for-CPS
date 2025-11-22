@@ -5,6 +5,7 @@ Captures packets and provides data for live visualization.
 
 import threading
 import time
+import heapq
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
@@ -68,15 +69,22 @@ class PacketVisualizer:
         self.packet_log = deque(maxlen=500)  # Store last 500 packets with details
         
     def _packet_handler(self, packet):
-        """Handle captured packet."""
+        """Handle captured packet - optimized for performance with error handling."""
         try:
+            if packet is None:
+                return
+            
             current_time = time.time()
+            if not isinstance(current_time, (int, float)) or current_time <= 0:
+                return
+            
             self.total_packets += 1
             
-            # Add to packet times for PPS calculation
+            # Add to packet times for PPS calculation (optimized: only append timestamp)
             self.packet_times.append(current_time)
             
-            # Extract packet information
+            # Extract packet information (optimized: only extract what's needed)
+            packet_len = len(packet)
             packet_info = {
                 "timestamp": datetime.now(),
                 "src_ip": None,
@@ -84,11 +92,11 @@ class PacketVisualizer:
                 "protocol": "Unknown",
                 "src_port": None,
                 "dst_port": None,
-                "length": len(packet),
-                "flags": None,
-                "summary": str(packet.summary())
+                "length": packet_len,
+                "flags": None
             }
             
+            # Optimize: Check IP layer first (most common case)
             if packet.haslayer(IP):
                 ip_layer = packet[IP]
                 src_ip = ip_layer.src
@@ -96,17 +104,16 @@ class PacketVisualizer:
                 packet_info["src_ip"] = src_ip
                 packet_info["dst_ip"] = dst_ip
                 
-                # Update heatmap
+                # Update heatmap (optimized: use tuple as key)
                 self.heatmap_data[(src_ip, dst_ip)] += 1
                 
-                # Update top talkers (source IP)
-                if src_ip not in self.top_talkers:
-                    self.top_talkers[src_ip]["last_seen"] = current_time
-                self.top_talkers[src_ip]["packets"] += 1
-                self.top_talkers[src_ip]["bytes"] += len(packet)
-                self.top_talkers[src_ip]["last_seen"] = current_time
+                # Update top talkers (source IP) - optimized batch update
+                talker = self.top_talkers[src_ip]
+                talker["packets"] += 1
+                talker["bytes"] += packet_len
+                talker["last_seen"] = current_time
                 
-                # Protocol detection
+                # Protocol detection (optimized: check in order of frequency)
                 if packet.haslayer(TCP):
                     tcp_layer = packet[TCP]
                     packet_info["protocol"] = "TCP"
@@ -127,31 +134,41 @@ class PacketVisualizer:
                     self.protocol_counts["Other"] += 1
                     packet_info["protocol"] = "Other"
             
-            # Store packet info for display
+            # Store packet info for display (only if needed for log)
             self.packet_log.append(packet_info)
             
-            # Calculate PPS periodically (every 10 packets or every second)
-            if len(self.packet_times) % 10 == 0 or len(self.pps_history) == 0:
-                # Calculate PPS over last time window
+            # Calculate PPS periodically (optimized: batch calculation every 20 packets)
+            if len(self.packet_times) % 20 == 0 or len(self.pps_history) == 0:
+                # Calculate PPS over last time window (optimized: use deque slicing)
                 window_start = current_time - self.time_window
-                recent_packets = [t for t in self.packet_times if t >= window_start]
+                # Use efficient filtering with deque
+                recent_count = sum(1 for t in self.packet_times if t >= window_start)
                 
-                if len(recent_packets) > 0:
-                    time_span = max(current_time - recent_packets[0], 0.1)  # Minimum 0.1s
-                    pps = len(recent_packets) / time_span
+                if recent_count > 0:
+                    # Estimate time span more efficiently
+                    oldest_in_window = next((t for t in reversed(self.packet_times) if t >= window_start), current_time)
+                    time_span = max(current_time - oldest_in_window, 0.1)
+                    pps = recent_count / time_span
                     self.pps_history.append((datetime.now(), pps))
             
-            # Cleanup old data periodically
-            if current_time - self.last_cleanup > 5.0:
+            # Cleanup old data periodically (optimized: less frequent cleanup)
+            if current_time - self.last_cleanup > 10.0:  # Increased from 5s to 10s
                 self._cleanup_old_data(current_time)
                 self.last_cleanup = current_time
                 
+        except AttributeError as e:
+            # Packet structure issue - skip this packet
+            logger.debug(f"Packet attribute error (skipping): {e}")
+        except (TypeError, ValueError) as e:
+            # Data type issue - skip this packet
+            logger.debug(f"Packet data type error (skipping): {e}")
         except Exception as e:
-            logger.debug(f"Error processing packet: {e}")
+            # Unexpected error - log but don't crash
+            logger.warning(f"Unexpected error processing packet: {e}", exc_info=True)
     
     def _cleanup_old_data(self, current_time: float):
-        """Clean up old data to prevent memory issues."""
-        # Clean old top talkers (not seen in last 5 minutes)
+        """Clean up old data to prevent memory issues - optimized."""
+        # Clean old top talkers (not seen in last 5 minutes) - optimized batch deletion
         cutoff_time = current_time - 300
         to_remove = [
             ip for ip, data in self.top_talkers.items()
@@ -160,15 +177,20 @@ class PacketVisualizer:
         for ip in to_remove:
             del self.top_talkers[ip]
         
-        # Limit heatmap data size
+        # Limit heatmap data size (optimized: only sort if needed)
         if len(self.heatmap_data) > 1000:
-            # Keep only top 500 connections
-            sorted_heatmap = sorted(
-                self.heatmap_data.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:500]
-            self.heatmap_data = defaultdict(int, sorted_heatmap)
+            # Keep only top 500 connections - use heap for better performance
+            top_connections = heapq.nlargest(500, self.heatmap_data.items(), key=lambda x: x[1])
+            self.heatmap_data = defaultdict(int, top_connections)
+        
+        # Clean old packet times (keep only last 2000 for PPS calculation)
+        if len(self.packet_times) > 2000:
+            # Keep only recent packet times
+            cutoff_time_pps = current_time - 60  # Keep last 60 seconds
+            self.packet_times = deque(
+                (t for t in self.packet_times if t >= cutoff_time_pps),
+                maxlen=2000
+            )
     
     def _capture_loop(self):
         """Main packet capture loop running in separate thread."""

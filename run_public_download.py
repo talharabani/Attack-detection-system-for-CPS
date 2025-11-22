@@ -15,18 +15,32 @@ def main():
     print("=" * 60)
     print("🛡️ Public Download Page")
     print("=" * 60)
-    print(f"Download page will open at: http://localhost:8501")
-    print("Users visiting this URL will see the download page")
-    print("They will NOT see your private dashboard")
+    
+    # Print the exact file being run for debugging
+    abs_path = download_path.absolute()
+    print(f"📄 Running file: {download_path.name}")
+    print(f"📂 Full path: {abs_path}")
+    print(f"✅ File exists: {download_path.exists()}")
+    print()
+    
+    # Use port 8502 to avoid conflicts with dashboard
+    port = "8502"
+    print(f"🌐 Download page will open at: http://localhost:{port}")
+    print("📥 Users visiting this URL will see the download page")
+    print("🔒 They will NOT see your private dashboard")
     print("=" * 60)
     print("Press Ctrl+C to stop")
     print("=" * 60)
+    print()
     
     try:
+        # Use absolute path and explicitly specify the file
         subprocess.run([
-            sys.executable, "-m", "streamlit", "run", str(download_path),
-            "--server.port", "8501",
-            "--server.headless", "false"
+            sys.executable, "-m", "streamlit", "run", str(abs_path),
+            "--server.port", port,
+            "--server.headless", "false",
+            "--server.fileWatcherType", "none",  # Disable file watching to prevent conflicts
+            "--browser.gatherUsageStats", "false"
         ])
     except KeyboardInterrupt:
         print("\nDownload page stopped.")

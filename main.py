@@ -28,6 +28,7 @@ from detectors.cps_detector import CPSDetector
 from detectors.modbus_detector import ModbusDetector
 from alerts.desktop_alert import DesktopAlert
 from alerts.telegram_alert import TelegramAlert
+from alerts.discord_alert import DiscordAlert
 from auto_response.active_defense import ActiveDefense
 from threat_intel.shodan_client import ShodanClient
 
@@ -54,6 +55,7 @@ class AttackDetectionSystem:
         # Initialize alert systems
         self.desktop_alert = DesktopAlert()
         self.telegram_alert = TelegramAlert()
+        self.discord_alert = DiscordAlert()
         
         # Initialize active defense (IPS)
         self.active_defense = ActiveDefense()
@@ -333,6 +335,9 @@ class AttackDetectionSystem:
             
             # Send Telegram alert
             self.telegram_alert.send_alert(attack_info)
+            
+            # Send Discord alert
+            self.discord_alert.send_alert(attack_info)
         else:
             logger.debug(f"Notification rate-limited for {src_ip} ({attack_type})")
         
@@ -445,6 +450,7 @@ class AttackDetectionSystem:
             logger.info("\nAlert Status:")
             logger.info(f"  - Desktop Alerts: {'[ENABLED]' if self.desktop_alert.enabled else '[DISABLED]'}")
             logger.info(f"  - Telegram Alerts: {'[ENABLED]' if self.telegram_alert.enabled else '[DISABLED]'}")
+            logger.info(f"  - Discord Alerts: {'[ENABLED]' if self.discord_alert.enabled else '[DISABLED]'}")
             
             # Print active defense status
             logger.info("\nActive Defense (IPS) Status:")
@@ -568,6 +574,7 @@ def main():
         logger.info("Testing alert systems...")
         desktop_alert = DesktopAlert()
         telegram_alert = TelegramAlert()
+        discord_alert = DiscordAlert()
         
         desktop_alert.test_notification()
         logger.info("Desktop alert test sent")
@@ -577,6 +584,12 @@ def main():
             logger.info("Telegram alert test sent")
         else:
             logger.info("Telegram alerts not configured")
+        
+        if discord_alert.enabled:
+            discord_alert.test_notification()
+            logger.info("Discord alert test sent")
+        else:
+            logger.info("Discord alerts not configured")
         
         return
     

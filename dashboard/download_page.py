@@ -1,6 +1,8 @@
 """
 Public Download Page for Attack Detection System Extension.
 Users visiting the root URL will see this page instead of the private dashboard.
+
+IMPORTANT: This is a PUBLIC page - NO PASSWORD REQUIRED!
 """
 
 import streamlit as st
@@ -12,13 +14,35 @@ import os
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Page configuration
+# CRITICAL: Clear any authentication state to ensure this is truly public
+if "authenticated" in st.session_state:
+    del st.session_state.authenticated
+
+# Page configuration - CRITICAL: This must be set BEFORE any other Streamlit calls
 st.set_page_config(
-    page_title="🛡️ Download Attack Detection System",
+    page_title="🛡️ Download Attack Detection System - PUBLIC PAGE",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': "Public Download Page - No Password Required"
+    }
 )
+
+# CRITICAL: Ensure this is the main entry point and not app.py
+# Verify we're running the correct file
+try:
+    import __main__
+    if hasattr(__main__, '__file__'):
+        current_file = Path(__main__.__file__).name
+        if 'download_page' not in current_file.lower():
+            # This shouldn't happen, but if it does, show an error
+            st.error(f"❌ ERROR: Wrong file loaded! Expected download_page.py but got {current_file}")
+            st.stop()
+except:
+    pass  # If we can't check, continue anyway
 
 # Beautiful CSS matching the dark theme
 st.markdown("""
@@ -98,7 +122,29 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    """Render the public download page."""
+    """Render the public download page - NO PASSWORD REQUIRED."""
+    
+    # IMPORTANT: This is a PUBLIC page - no authentication needed
+    # Clear any authentication state that might have been set
+    if "authenticated" in st.session_state:
+        del st.session_state.authenticated
+    
+    # BIG WARNING if password check appears (should never happen)
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem; background: rgba(39, 174, 96, 0.2); border: 3px solid #27ae60; border-radius: 15px; margin-bottom: 2rem;">
+        <h1 style="color: #27ae60; margin: 0; font-size: 2.5rem;">✅ PUBLIC DOWNLOAD PAGE</h1>
+        <h2 style="color: #E0E0E0; margin: 0.5rem 0 0 0;">🔓 NO PASSWORD REQUIRED - OPEN ACCESS</h2>
+        <p style="color: #B0B0B0; margin: 1rem 0 0 0; font-size: 1.1rem;">If you see a password prompt, something is wrong!</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Additional header
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem; background: rgba(136, 136, 136, 0.2); border-radius: 10px; margin-bottom: 2rem;">
+        <h2 style="color: #E0E0E0; margin: 0;">📥 Download Extension Here</h2>
+        <p style="color: #B0B0B0; margin: 0.5rem 0 0 0;">This is the public download page for users - completely open access</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Hero Section
     st.markdown("""
@@ -125,6 +171,9 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
+        # Always show download section
+        st.markdown("### ⬇️ Download Extension")
+        
         # Check if extension package exists
         extension_dir = project_root / "extension_build"
         exe_path = None
@@ -146,23 +195,87 @@ def main():
             st.success(f"✅ Extension package ready: `{exe_path.name}`")
             
             # Read file for download
-            with open(exe_path, "rb") as f:
-                file_bytes = f.read()
-            
-            st.download_button(
-                label="⬇️ Download Extension (Standalone)",
-                data=file_bytes,
-                file_name=exe_path.name,
-                mime="application/octet-stream",
-                use_container_width=True,
-                key="download_extension"
-            )
-            
-            file_size_mb = exe_path.stat().st_size / (1024 * 1024)
-            st.caption(f"📦 File size: {file_size_mb:.1f} MB")
+            try:
+                with open(exe_path, "rb") as f:
+                    file_bytes = f.read()
+                
+                st.download_button(
+                    label="⬇️ Download Extension (Standalone Executable)",
+                    data=file_bytes,
+                    file_name=exe_path.name,
+                    mime="application/octet-stream",
+                    use_container_width=True,
+                    key="download_extension"
+                )
+                
+                file_size_mb = exe_path.stat().st_size / (1024 * 1024)
+                st.caption(f"📦 File size: {file_size_mb:.1f} MB")
+            except Exception as e:
+                st.error(f"Error reading extension file: {e}")
         else:
-            st.warning("⚠️ Extension package not yet built. Please build it first using the build script.")
-            st.info("💡 To build the extension, run: `python build_extension.py`")
+            # Show download options even if extension not built
+            st.warning("⚠️ Standalone executable not yet built.")
+            
+            # Option 1: Download source code
+            st.markdown("#### 📥 Download Source Code (Alternative)")
+            st.info("""
+            **You can download the complete source code and run it directly:**
+            - All features included
+            - Requires Python 3.7+
+            - Install dependencies: `pip install -r requirements.txt`
+            - Run: `python main.py` for detection, `python run_dashboard.py` for dashboard
+            """)
+            
+            # Create a zip of the project for download
+            import zipfile
+            import io
+            
+            try:
+                # Create zip in memory
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    # Add key files
+                    key_files = [
+                        'main.py', 'config.json', 'requirements.txt', 'README.md',
+                        'run_dashboard.py', 'run_public_download.py'
+                    ]
+                    key_dirs = ['dashboard', 'detectors', 'monitor', 'alerts', 'utils', 'auto_response', 'threat_intel']
+                    
+                    for file in key_files:
+                        file_path = project_root / file
+                        if file_path.exists():
+                            zip_file.write(file_path, file)
+                    
+                    for dir_name in key_dirs:
+                        dir_path = project_root / dir_name
+                        if dir_path.exists() and dir_path.is_dir():
+                            for file_path in dir_path.rglob('*.py'):
+                                if '__pycache__' not in str(file_path):
+                                    zip_file.write(file_path, file_path.relative_to(project_root))
+                
+                zip_buffer.seek(0)
+                
+                st.download_button(
+                    label="⬇️ Download Source Code (ZIP)",
+                    data=zip_buffer.getvalue(),
+                    file_name="AttackDetectionSystem-Source.zip",
+                    mime="application/zip",
+                    use_container_width=True,
+                    key="download_source"
+                )
+                st.caption("📦 Contains all source code files")
+            except Exception as e:
+                st.error(f"Error creating source package: {e}")
+            
+            st.markdown("---")
+            st.markdown("#### 🔨 Build Standalone Executable")
+            st.info("""
+            **To create a standalone executable (no Python required):**
+            1. Run: `python build_extension.py`
+            2. Wait for build to complete
+            3. Find executable in `extension_build/` folder
+            4. The download button will appear here automatically
+            """)
         
         st.markdown("---")
         
@@ -245,6 +358,18 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
+# CRITICAL: This must be called directly, not imported
 if __name__ == "__main__":
+    # Double-check we're running the right file
+    import sys
+    if 'app.py' in sys.argv[0] or 'app.py' in str(Path(__file__).name):
+        st.error("❌ ERROR: app.py is being loaded instead of download_page.py!")
+        st.error("Please run: python run_public_download.py")
+        st.stop()
+    
+    # Run the main function
+    main()
+else:
+    # If imported, still run main() to ensure it works
     main()
 

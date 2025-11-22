@@ -50,7 +50,13 @@
     },
     "cps": {
       "enabled": true,
-      "enabled_protocols": ["modbus", "dnp3", "opcua", "iec61850", "bacnet"],
+      "enabled_protocols": [
+        "modbus",
+        "dnp3",
+        "opcua",
+        "iec61850",
+        "bacnet"
+      ],
       "unauthorized_threshold": 3,
       "replay_window_seconds": 60,
       "timing_anomaly_threshold": 2.0,
@@ -79,6 +85,10 @@
       "enabled": false,
       "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
       "chat_id": "YOUR_CHAT_ID"
+    },
+    "discord": {
+      "enabled": true,
+      "webhook_url": "https://discord.com/api/webhooks/1441878586431639553/ym4jNc6Ykp0UDhYZsyf5SyNtM8v4g_hbtiIyYmxricgDAAgySza1SogDMux2-xcJAvUW"
     }
   },
   "logs": {
@@ -104,7 +114,11 @@
     "auto_restart_services": false,
     "block_duration_minutes": 60,
     "whitelist_ips": [],
-    "protected_services": ["winlogon", "csrss", "lsass"]
+    "protected_services": [
+      "winlogon",
+      "csrss",
+      "lsass"
+    ]
   },
   "dashboard": {
     "enabled": true,

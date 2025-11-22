@@ -9,22 +9,27 @@ All dependencies have been installed successfully:
 
 ## 🎯 How to Run the System
 
-### Option 1: Public Download Page (For Users)
+### Option 1: Public Download Page (For Users) ⬇️
 
-This shows the download page to users visiting your URL:
+**This is what users see to download the extension:**
 
 ```bash
 python run_public_download.py
 ```
 
 **Access:** `http://localhost:8501`
-- Users see download page
-- They can download the extension
-- They CANNOT see your private dashboard
+- ✅ Users see download page
+- ✅ They can download the extension
+- ✅ They CANNOT see your private dashboard
+- ✅ No password required
 
-### Option 2: Private Dashboard (For You)
+**Use this when:** You want users to visit your URL and download the extension
 
-This shows your password-protected dashboard:
+---
+
+### Option 2: Private Dashboard (For You) 🔒
+
+**This is YOUR private monitoring dashboard:**
 
 ```bash
 python run_dashboard.py dashboard
@@ -37,9 +42,21 @@ python run_dashboard.py
 ```
 
 **Access:** `http://localhost:8501`
-- Password: `12345` (set in config.json)
-- You see your private monitoring dashboard
-- All your attack data and analytics
+- 🔒 Password: `12345` (set in config.json)
+- 📊 You see your private monitoring dashboard
+- 🚨 All your attack data and analytics
+- 👤 Your personal attack history
+
+**Use this when:** You want to monitor your own network and see attack data
+
+---
+
+### ⚠️ Important: Which One to Use?
+
+- **For Users to Download Extension** → Use `python run_public_download.py`
+- **For Your Private Dashboard** → Use `python run_dashboard.py dashboard`
+
+**You can only run ONE at a time** (both use port 8501)
 
 ### Option 3: Build Extension Package
 
